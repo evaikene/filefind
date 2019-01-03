@@ -1,0 +1,279 @@
+#include "args.H"
+#include "filter.H"
+#include "error.H"
+
+#include <boost/shared_ptr.hpp>
+
+#include <string>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+namespace
+{
+    void _closedir(DIR * d)
+    {
+        if (NULL != d)
+        {
+            closedir(d);
+        }
+    }
+
+    void _fclose(FILE * f)
+    {
+        if (NULL != f)
+        {
+            fclose(f);
+        }
+    }
+
+    bool excludeFileByContent(std::string const & path, Filter const & filter)
+    {
+        bool rval = false;
+        boost::shared_ptr<FILE> f(fopen(path.c_str(), "r"), _fclose);
+        if (!f)
+        {
+            fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %m\n", path.c_str());
+            return rval;
+        }
+
+        char buf[1024];
+        while (!rval && fgets(buf, sizeof(buf), f.get()) != NULL)
+        {
+            // Remove trailing CR and LF characters
+            size_t sz = strlen(buf);
+            while (sz > 0 && (buf[sz - 1] == '\n' || buf[sz - 1] == '\r'))
+            {
+                buf[--sz] = '\0';
+            }
+            rval = filter.excludeContent(buf);
+        }
+        return rval;
+    }
+
+    void findInFile(std::string const & path, Filter const & filter)
+    {
+        boost::shared_ptr<FILE> f(fopen(path.c_str(), "r"), _fclose);
+        if (!f)
+        {
+            fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %m\n", path.c_str());
+            return;
+        }
+
+        char buf[1024];
+        int lineno = 0;
+        bool binary = false;
+        while (fgets(buf, sizeof(buf), f.get()) != NULL)
+        {
+            // Remove trailing CR and LF characters
+            size_t sz = strlen(buf);
+            while (sz > 0 && (buf[sz - 1] == '\n' || buf[sz - 1] == '\r'))
+            {
+                buf[--sz] = '\0';
+            }
+
+            // Check for a binary file
+            for (size_t i = 0; !filter.args().ascii() && !binary && i < sz; ++i)
+            {
+                binary = (isprint(buf[i]) == 0 && buf[i] != '\t');
+            }
+
+            ++lineno;
+            regmatch_t pmatch = { -1, -1 };
+            if (filter.matchContent(buf, &pmatch))
+            {
+                if (filter.printContent())
+                {
+                    if (!binary)
+                    {
+                        // Print content
+                        char s1[1024];
+                        char s2[1024];
+                        char s3[1024];
+                        strncpy(s1, buf, pmatch.rm_so);
+                        s1[pmatch.rm_so] = '\0';
+                        strncpy(s2, &buf[pmatch.rm_so], pmatch.rm_eo - pmatch.rm_so);
+                        s2[pmatch.rm_eo - pmatch.rm_so] = '\0';
+                        strcpy(s3, &buf[pmatch.rm_eo]);
+
+                        printf("%s +%d : \"%s\033[31m%s\033[0m%s\"\n",
+                               path.c_str(), lineno, s1, s2, s3);
+                    }
+                    else
+                    {
+                        // Print only file name and exit
+                        printf("%s : binary file matches\n", path.c_str());
+                        break;
+                    }
+                }
+                else
+                {
+                    // Print only file name and exit
+                    printf("%s\n", path.c_str());
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Returns the type of the inode. Uses stat(2) if the type returned by
+    /// readdir(3) is unknown.
+    unsigned char getType(std::string const & pathname, unsigned char const d)
+    {
+        unsigned char rval = d;
+        if (d == DT_UNKNOWN)
+        {
+            struct stat sb;
+            if (lstat(pathname.c_str(), &sb) == 0)
+            {
+                rval = IFTODT(sb.st_mode);
+            }
+        }
+        return rval;
+    }
+
+    void findFiles(std::string const & root, std::string const & path, bool dirMatch, Filter const & filter)
+    {
+        std::string fullPath(root);
+        if (!fullPath.empty())
+        {
+            fullPath.append("/");
+        }
+        if (!path.empty())
+        {
+            fullPath.append(path);
+            if (path.at(path.size() - 1) != '/')
+            {
+                fullPath.append(1, '/');
+            }
+        }
+        boost::shared_ptr<DIR> dir(opendir(fullPath.c_str()), _closedir);
+        if (!dir)
+        {
+            fprintf(stderr, "\033[31mERROR:\033[0m Failed to open directory %s : %m\n", fullPath.c_str());
+            return;
+        }
+        struct dirent const * dent = NULL;
+        while ((dent = readdir(dir.get())) != NULL)
+        {
+            char const * d_name = dent->d_name;
+            unsigned char const d_type = getType(fullPath + d_name, dent->d_type);
+
+            if (DT_LNK == dent->d_type)
+            {
+                if (!filter.matchFile(d_name))
+                {
+                    // Skip symbolic links that do not match the file name filter
+                    continue;
+                }
+                std::string const filePath(fullPath + d_name);
+                char buf[PATH_MAX];
+                ssize_t sz = PATH_MAX - 1;
+                if ((sz = readlink(filePath.c_str(), buf, sz)) == -1)
+                {
+                    // Ignore invalid symbolic links
+                    continue;
+                }
+                buf[sz] = '\0';
+                std::string newPath = buf;
+                if (buf[0] != '/')
+                {
+                    newPath = fullPath + newPath;
+                }
+                struct stat st;
+                if (stat(newPath.c_str(), &st) == -1 || !S_ISREG(st.st_mode))
+                {
+                    // Ignore stat errors and anything else than regular files
+                    continue;
+                }
+                if (filter.hasExcludeContentFilters() && excludeFileByContent(filePath, filter))
+                {
+                    continue;
+                }
+                if (filter.hasContentFilters())
+                {
+                    findInFile(filePath, filter);
+                }
+                else
+                {
+                    printf("%s\n", filePath.c_str());
+                }
+            }
+            else if (DT_DIR == d_type && strcmp(d_name, ".") != 0
+                                      && strcmp(d_name, "..") != 0)
+            {
+                std::string newPath(path);
+                if (!newPath.empty())
+                {
+                    newPath.append(1, '/');
+                }
+                if (filter.matchFile(d_name) && !filter.hasContentFilters())
+                {
+                    // Directory name itself matches the name filter
+                    printf("%s\033[31m%s\033[0m/ : directory name matches\n", fullPath.c_str(), d_name);
+                }
+                newPath.append(d_name);
+                if (filter.excludeDir(d_name) || filter.excludeDir(newPath))
+                {
+                    continue; // Ignore paths that match ignored directory filters
+                }
+                findFiles(root, newPath, dirMatch | filter.matchDir(d_name) | filter.matchDir(newPath), filter);
+            }
+            else if (DT_REG == d_type && filter.matchFile(d_name))
+            {
+                if (!dirMatch)
+                {
+                    continue;
+                }
+                std::string const filePath(fullPath + d_name);
+                if (filter.hasExcludeContentFilters() && excludeFileByContent(filePath, filter))
+                {
+                    continue;
+                }
+                if (filter.hasContentFilters())
+                {
+                    findInFile(filePath, filter);
+                }
+                else
+                {
+                    printf("%s\033[31m%s\033[0m\n", fullPath.c_str(), d_name);
+                }
+            }
+        }
+    }
+
+    void search(Args const & args)
+    {
+        Filter f(args);
+
+        // Recursively search for files
+        findFiles(args.path(), "", f.matchDir(""), f);
+    }
+}
+
+int main(int argc, char ** argv)
+{
+    // Parse command line arguments
+    Args args(argc, argv);
+    if (!args.valid())
+    {
+        return EXIT_FAILURE;
+    }
+
+    try
+    {
+        search(args);
+    }
+    catch (Error const & e)
+    {
+        fprintf(stderr, "\033[31mERROR:\033[0m %s\n", e.what());
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}

@@ -1,0 +1,6 @@
+project(FileFind)
+cmake_minimum_required(VERSION 2.8)
+find_package(Boost REQUIRED COMPONENTS thread)
+include_directories(${Boost_INCLUDE_DIRS})
+FILE(GLOB SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+add_executable(${PROJECT_NAME} ${SRCS})
