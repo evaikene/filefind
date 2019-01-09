@@ -13,6 +13,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#if defined(__APPLE__)
+#include <sys/syslimits.h>
+#endif
+
 
 namespace
 {
