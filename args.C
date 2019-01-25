@@ -1,6 +1,7 @@
 #include "args.H"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 
@@ -19,6 +20,9 @@ namespace
         "  -C, --icontent <regex> file content filter (case insensitive)\n"
         "  -d, --dir <pattern>   directory name filter (case sensitive)\n"
         "  -D, --idir <pattern>  directory name filter (case insensitive)\n"
+        "  -e, --extra <n>       print additional <n> lines after a match with -a\n"
+        "  -E, --exec \"<cmd> {}\" execute <cmd> for every matching file\n"
+        "                        {} will be replaced with the name of the file\n"
         "  -f, --name <pattern>  file name filter (case sensitive)\n"
         "  -F, --iname <pattern> file name filter (case insensitive)\n"
         "  -h, --help            prints this help message and exits\n"
@@ -48,7 +52,7 @@ namespace
         "> %1$s ~/src/TMTC -f \"*.C\" -c \"MISCconfig\" -d \'!unit-tests\' -d \'!unittest\'\n"
         "\n";
 
-    char const * const shortOpts = ":aAc:C:d:D:f:F:hn";
+    char const * const shortOpts = ":aAc:C:d:D:e:E:f:F:hn";
     struct option const longOpts[] =
     {
         { "all",        no_argument,        0, 'a' },
@@ -61,6 +65,8 @@ namespace
         { "iname",      required_argument,  0, 'F' },
         { "help",       no_argument,        0, 'h' },
         { "not",        no_argument,        0, 'n' },
+        { "extra",      required_argument,  0, 'e' },
+        { "exec",       required_argument,  0, 'E' },
         { 0,            0,                  0, 0 }
     };
 
@@ -75,6 +81,7 @@ Args::Args(int argc, char ** argv)
     : m_valid(false)
     , m_path(".")
     , m_allContent(false)
+    , m_extraContent(0)
     , m_ascii(false)
 {
     char const * appName = argv[0];
@@ -94,6 +101,22 @@ Args::Args(int argc, char ** argv)
             case 'a':
             {
                 m_allContent = true;
+                break;
+            }
+            case 'e':
+            {
+                char * e = nullptr;
+                m_extraContent = strtol(optarg, &e, 10);
+                if (e == nullptr || *e != '\0')
+                {
+                    fprintf(stderr, "Invalid value \"%s\"\n", optarg);
+                    return;
+                }
+                break;
+            }
+            case 'E':
+            {
+                m_exec = optarg;
                 break;
             }
             case 'A':
@@ -183,7 +206,17 @@ Args::Args(int argc, char ** argv)
 
     if (m_allContent && m_inContent.empty())
     {
-        fprintf(stderr, "--all option is only allowed if content filter is not empty.\n");
+        fprintf(stderr, "--all option is only allowed if the content filter is not empty.\n");
+        return;
+    }
+    if (m_extraContent > 0 && !m_allContent)
+    {
+        fprintf(stderr, "--extra option is only allowed with the --all option.\n");
+        return;
+    }
+    if (!m_exec.empty() && m_allContent)
+    {
+        fprintf(stderr, "--exec option cannot be used with the --all option.\n");
         return;
     }
 

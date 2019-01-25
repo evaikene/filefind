@@ -111,9 +111,17 @@ public:
     {
         return m_allContent;
     }
+    inline int extraContent() const
+    {
+        return m_extraContent;
+    }
     inline bool ascii() const
     {
         return m_ascii;
+    }
+    inline std::string const & execCmd() const
+    {
+        return m_exec;
     }
 
 private:
@@ -131,6 +139,8 @@ private:
     std::list<String> m_exContent;
     bool m_allContent;
     bool m_ascii;
+    int m_extraContent;
+    std::string m_exec;
 };
 
 #endif // ARGS_H

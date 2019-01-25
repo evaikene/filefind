@@ -29,7 +29,10 @@ protected:
 #define ERROR(fmt, ...) \
 { \
     char * buf = NULL; \
-    asprintf(&buf, fmt, __VA_ARGS__); \
+    if (asprintf(&buf, fmt, __VA_ARGS__) == -1) \
+    { \
+        throw std::runtime_error("asprintf returned -1"); \
+    } \
     std::string const msg(buf); \
     free(buf); \
     throw Error(msg); \

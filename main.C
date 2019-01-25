@@ -36,6 +36,19 @@ namespace
         }
     }
 
+    /// Executes the command for a file
+    void execCmd(std::string const & cmd, std::string const & path)
+    {
+        std::string cmdline(cmd);
+        size_t pos = 0;
+        while ((pos = cmdline.find("{}", pos)) != std::string::npos)
+        {
+            cmdline.replace(pos, 2, path);
+            pos = pos - 2 + path.size();
+        }
+        int const rval = system(cmdline.c_str());
+    }
+
     bool excludeFileByContent(std::string const & path, Filter const & filter)
     {
         bool rval = false;
@@ -72,6 +85,7 @@ namespace
         char buf[1024];
         int lineno = 0;
         bool binary = false;
+        int linesToPrint = 0;
         while (fgets(buf, sizeof(buf), f.get()) != NULL)
         {
             // Remove trailing CR and LF characters
@@ -107,6 +121,8 @@ namespace
 
                         printf("%s +%d : \"%s\033[31m%s\033[0m%s\"\n",
                                path.c_str(), lineno, s1, s2, s3);
+
+                        linesToPrint = filter.args().extraContent();
                     }
                     else
                     {
@@ -115,12 +131,25 @@ namespace
                         break;
                     }
                 }
+                else if (!filter.args().execCmd().empty())
+                {
+                    // Run the command and exit
+                    execCmd(filter.args().execCmd(), path);
+                    break;
+                }
                 else
                 {
                     // Print only file name and exit
                     printf("%s\n", path.c_str());
                     break;
                 }
+            }
+
+            // Print extra content
+            if (linesToPrint > 0)
+            {
+                printf("\t%s\n", buf);
+                --linesToPrint;
             }
         }
     }
@@ -162,6 +191,10 @@ namespace
             fprintf(stderr, "\033[31mERROR:\033[0m Failed to open directory %s : %m\n", fullPath.c_str());
             return;
         }
+
+        std::string const cmd(filter.args().execCmd());
+        bool const hasCmd(!cmd.empty());
+
         struct dirent const * dent = NULL;
         while ((dent = readdir(dir.get())) != NULL)
         {
@@ -203,6 +236,10 @@ namespace
                 {
                     findInFile(filePath, filter);
                 }
+                else if (hasCmd)
+                {
+                    execCmd(cmd, filePath);
+                }
                 else
                 {
                     printf("%s\n", filePath.c_str());
@@ -216,7 +253,7 @@ namespace
                 {
                     newPath.append(1, '/');
                 }
-                if (filter.matchFile(d_name) && !filter.hasContentFilters())
+                if (filter.matchFile(d_name) && !filter.hasContentFilters() && filter.args().execCmd().empty())
                 {
                     // Directory name itself matches the name filter
                     printf("%s\033[31m%s\033[0m/ : directory name matches\n", fullPath.c_str(), d_name);
@@ -242,6 +279,10 @@ namespace
                 if (filter.hasContentFilters())
                 {
                     findInFile(filePath, filter);
+                }
+                else if (hasCmd)
+                {
+                    execCmd(cmd, filePath);
                 }
                 else
                 {
