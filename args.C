@@ -11,7 +11,8 @@ namespace
         "USAGE: %1$s [args] [path]\n"
         "\n"
         "where \'path\' is an optional path to start searching. Uses the current working\n"
-        "directory if no \'path\' is given.\n"
+        "directory if no \'path\' is given. Without any filter arguments uses [path] as\n"
+        "the name filter and searches for it in the current directory.\n"
         "\n"
         "args:\n"
         "  -a, --all             print all the matching lines in a file\n"
@@ -206,11 +207,18 @@ Args::Args(int argc, char ** argv)
 
     if (optind < argc)
     {
-        m_path = argv[optind];
-        // Remove trailing slashes
-        while (m_path.size() > 1 && m_path.at(m_path.size() - 1) == '/')
+        if (m_inContent.empty() && m_exContent.empty())
         {
-            m_path.resize(m_path.size() - 1);
+            m_inFiles.push_back(argv[optind]);
+        }
+        else
+        {
+            m_path = argv[optind];
+            // Remove trailing slashes
+            while (m_path.size() > 1 && m_path.at(m_path.size() - 1) == '/')
+            {
+                m_path.resize(m_path.size() - 1);
+            }
         }
     }
 
