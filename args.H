@@ -119,6 +119,10 @@ public:
     {
         return m_ascii;
     }
+    inline bool noColor() const
+    {
+        return m_noColor;
+    }
     inline std::string const & execCmd() const
     {
         return m_exec;
@@ -139,6 +143,7 @@ private:
     std::list<String> m_exContent;
     bool m_allContent;
     bool m_ascii;
+    bool m_noColor;
     int m_extraContent;
     std::string m_exec;
 };

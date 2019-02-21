@@ -28,6 +28,9 @@ namespace
         "  -h, --help            prints this help message and exits\n"
         "  -n, --not             prefix for the next file name, directory name,\n"
         "                        or file content filter making it an exclude filter\n"
+        "  -o, --nocolor         do not highlight search results with colors\n"
+        "                        useful when the search results is used as an input\n"
+        "                        for some other commands"
         "\n"
         "File and directory name filters use the fnmatch(3) shell wildcard patterns.\n"
         "File content filters use regex(7) regular expressions.\n"
@@ -52,7 +55,7 @@ namespace
         "> %1$s ~/src/TMTC -f \"*.C\" -c \"MISCconfig\" -d \'!unit-tests\' -d \'!unittest\'\n"
         "\n";
 
-    char const * const shortOpts = ":aAc:C:d:D:e:E:f:F:hn";
+    char const * const shortOpts = ":aAc:C:d:D:e:E:f:F:hno";
     struct option const longOpts[] =
     {
         { "all",        no_argument,        0, 'a' },
@@ -67,6 +70,7 @@ namespace
         { "not",        no_argument,        0, 'n' },
         { "extra",      required_argument,  0, 'e' },
         { "exec",       required_argument,  0, 'E' },
+        { "nocolor,     no_argument,        0, 'o' "},
         { 0,            0,                  0, 0 }
     };
 
@@ -83,6 +87,7 @@ Args::Args(int argc, char ** argv)
     , m_allContent(false)
     , m_extraContent(0)
     , m_ascii(false)
+    , m_noColor(false)
 {
     char const * appName = argv[0];
     int c = 0;
@@ -175,6 +180,11 @@ Args::Args(int argc, char ** argv)
                     m_exFiles.push_back(s);
                     no = false;
                 }
+                break;
+            }
+            case 'o':
+            {
+                m_noColor = true;
                 break;
             }
             case ':':

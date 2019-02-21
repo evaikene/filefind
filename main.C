@@ -86,6 +86,7 @@ namespace
         int lineno = 0;
         bool binary = false;
         int linesToPrint = 0;
+        bool const nocolor = filter.args().noColor();
         while (fgets(buf, sizeof(buf), f.get()) != NULL)
         {
             // Remove trailing CR and LF characters
@@ -119,8 +120,14 @@ namespace
                         s2[pmatch.rm_eo - pmatch.rm_so] = '\0';
                         strcpy(s3, &buf[pmatch.rm_eo]);
 
-                        printf("%s +%d : \"%s\033[31m%s\033[0m%s\"\n",
-                               path.c_str(), lineno, s1, s2, s3);
+                        printf("%s +%d : \"%s%s%s%s%s\"\n",
+                               path.c_str(),
+                               lineno,
+                               s1,
+                               nocolor ? "" : "\033[31m",
+                               s2,
+                               nocolor ? "" : "\033[0m",
+                               s3);
 
                         linesToPrint = filter.args().extraContent();
                     }
@@ -195,6 +202,7 @@ namespace
         std::string const cmd(filter.args().execCmd());
         bool const hasCmd(!cmd.empty());
 
+        bool const nocolor = filter.args().noColor();
         struct dirent const * dent = NULL;
         while ((dent = readdir(dir.get())) != NULL)
         {
@@ -256,7 +264,11 @@ namespace
                 if (filter.matchFile(d_name) && !filter.hasContentFilters() && filter.args().execCmd().empty())
                 {
                     // Directory name itself matches the name filter
-                    printf("%s\033[31m%s\033[0m/ : directory name matches\n", fullPath.c_str(), d_name);
+                    printf("%s%s%s%s/ : directory name matches\n",
+                        fullPath.c_str(),
+                        nocolor ? "" : "\033[31m",
+                        d_name,
+                        nocolor ? "" : "\033[0m");
                 }
                 newPath.append(d_name);
                 if (filter.excludeDir(d_name) || filter.excludeDir(newPath))
@@ -286,7 +298,11 @@ namespace
                 }
                 else
                 {
-                    printf("%s\033[31m%s\033[0m\n", fullPath.c_str(), d_name);
+                    printf("%s%s%s%s\n",
+                        fullPath.c_str(),
+                        nocolor ? "" : "\033[31m",
+                        d_name,
+                        nocolor ? "" : "\033[0m");
                 }
             }
         }
