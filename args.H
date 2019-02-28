@@ -12,7 +12,7 @@ public:
         : m_noCase(nc)
         , m_no(false)
     {
-        setValue(s != NULL ? std::string(s) : std::string());
+        setValue(s != nullptr ? std::string(s) : std::string());
     }
     inline String(std::string const & s, bool nc = false)
         : m_noCase(nc)

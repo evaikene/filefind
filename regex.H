@@ -15,7 +15,7 @@ public:
     ~Regex();
 
     bool valid() const { return m_valid; }
-    bool match(std::string const & s, regmatch_t * pmatch = NULL) const;
+    bool match(std::string const & s, regmatch_t * pmatch = nullptr) const;
 
 private:
 

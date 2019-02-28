@@ -13,10 +13,10 @@ public:
     inline explicit Error(std::string const & msg)
         : m_msg(msg)
     {}
-    inline virtual ~Error() throw()
+    inline virtual ~Error() noexcept
     {}
 
-    inline virtual char const * what() const throw()
+    inline virtual char const * what() const noexcept
     {
         return m_msg.c_str();
     }

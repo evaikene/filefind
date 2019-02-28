@@ -59,20 +59,20 @@ namespace
     char const * const shortOpts = ":aAc:C:d:D:e:E:f:F:hno";
     struct option const longOpts[] =
     {
-        { "all",        no_argument,        0, 'a' },
-        { "ascii",      no_argument,        0, 'A' },
-        { "content",    required_argument,  0, 'c' },
-        { "icontent",   required_argument,  0, 'C' },
-        { "dir",        required_argument,  0, 'd' },
-        { "idir",       required_argument,  0, 'D' },
-        { "name",       required_argument,  0, 'f' },
-        { "iname",      required_argument,  0, 'F' },
-        { "help",       no_argument,        0, 'h' },
-        { "not",        no_argument,        0, 'n' },
-        { "extra",      required_argument,  0, 'e' },
-        { "exec",       required_argument,  0, 'E' },
-        { "nocolor,     no_argument,        0, 'o' "},
-        { 0,            0,                  0, 0 }
+        { "all",        no_argument,        nullptr, 'a' },
+        { "ascii",      no_argument,        nullptr, 'A' },
+        { "content",    required_argument,  nullptr, 'c' },
+        { "icontent",   required_argument,  nullptr, 'C' },
+        { "dir",        required_argument,  nullptr, 'd' },
+        { "idir",       required_argument,  nullptr, 'D' },
+        { "name",       required_argument,  nullptr, 'f' },
+        { "iname",      required_argument,  nullptr, 'F' },
+        { "help",       no_argument,        nullptr, 'h' },
+        { "not",        no_argument,        nullptr, 'n' },
+        { "extra",      required_argument,  nullptr, 'e' },
+        { "exec",       required_argument,  nullptr, 'E' },
+        { "nocolor",    no_argument,        nullptr, 'o' },
+        { nullptr,      0,                  nullptr, 0 }
     };
 
 }
@@ -86,9 +86,9 @@ Args::Args(int argc, char ** argv)
     : m_valid(false)
     , m_path(".")
     , m_allContent(false)
-    , m_extraContent(0)
     , m_ascii(false)
     , m_noColor(false)
+    , m_extraContent(0)
 {
     char const * appName = argv[0];
     int c = 0;
@@ -102,7 +102,6 @@ Args::Args(int argc, char ** argv)
             {
                 printUsage(false, appName);
                 return;
-                break;
             }
             case 'a':
             {
@@ -112,7 +111,7 @@ Args::Args(int argc, char ** argv)
             case 'e':
             {
                 char * e = nullptr;
-                m_extraContent = strtol(optarg, &e, 10);
+                m_extraContent = int(strtol(optarg, &e, 10));
                 if (e == nullptr || *e != '\0')
                 {
                     fprintf(stderr, "Invalid value \"%s\"\n", optarg);
@@ -193,21 +192,19 @@ Args::Args(int argc, char ** argv)
                 fprintf(stderr, "Missing argument\n\n");
                 printUsage(true, appName);
                 return;
-                break;
             }
             default:
             {
                 fprintf(stderr, "Invalid option\n\n");
                 printUsage(true, appName);
                 return;
-                break;
             }
         }
     }
 
     if (optind < argc)
     {
-        if (m_inContent.empty() && m_exContent.empty())
+        if (m_inFiles.empty() && m_exFiles.empty())
         {
             m_inFiles.push_back(argv[optind]);
         }

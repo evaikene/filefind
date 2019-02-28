@@ -29,7 +29,7 @@ bool Regex::match(std::string const & s, regmatch_t * pmatch) const
     if (m_valid)
     {
         size_t nmatch = 0;
-        if (pmatch != NULL)
+        if (pmatch != nullptr)
         {
             nmatch = 1;
             bzero(pmatch, sizeof(regmatch_t));
