@@ -22,7 +22,7 @@ namespace
 {
     void _closedir(DIR * d)
     {
-        if (NULL != d)
+        if (nullptr != d)
         {
             closedir(d);
         }
@@ -30,7 +30,7 @@ namespace
 
     void _fclose(FILE * f)
     {
-        if (NULL != f)
+        if (nullptr != f)
         {
             fclose(f);
         }
@@ -46,7 +46,7 @@ namespace
             cmdline.replace(pos, 2, path);
             pos = pos - 2 + path.size();
         }
-        int const rval = system(cmdline.c_str());
+        if (system(cmdline.c_str()) != 0) {}
     }
 
     bool excludeFileByContent(std::string const & path, Filter const & filter)
@@ -60,7 +60,7 @@ namespace
         }
 
         char buf[1024];
-        while (!rval && fgets(buf, sizeof(buf), f.get()) != NULL)
+        while (!rval && fgets(buf, sizeof(buf), f.get()) != nullptr)
         {
             // Remove trailing CR and LF characters
             size_t sz = strlen(buf);
@@ -87,7 +87,7 @@ namespace
         bool binary = false;
         int linesToPrint = 0;
         bool const nocolor = filter.args().noColor();
-        while (fgets(buf, sizeof(buf), f.get()) != NULL)
+        while (fgets(buf, sizeof(buf), f.get()) != nullptr)
         {
             // Remove trailing CR and LF characters
             size_t sz = strlen(buf);
@@ -114,9 +114,9 @@ namespace
                         char s1[1024];
                         char s2[1024];
                         char s3[1024];
-                        strncpy(s1, buf, pmatch.rm_so);
+                        strncpy(s1, buf, size_t(pmatch.rm_so));
                         s1[pmatch.rm_so] = '\0';
-                        strncpy(s2, &buf[pmatch.rm_so], pmatch.rm_eo - pmatch.rm_so);
+                        strncpy(s2, &buf[pmatch.rm_so], size_t(pmatch.rm_eo - pmatch.rm_so));
                         s2[pmatch.rm_eo - pmatch.rm_so] = '\0';
                         strcpy(s3, &buf[pmatch.rm_eo]);
 
@@ -203,8 +203,8 @@ namespace
         bool const hasCmd(!cmd.empty());
 
         bool const nocolor = filter.args().noColor();
-        struct dirent const * dent = NULL;
-        while ((dent = readdir(dir.get())) != NULL)
+        struct dirent const * dent = nullptr;
+        while ((dent = readdir(dir.get())) != nullptr)
         {
             char const * d_name = dent->d_name;
             unsigned char const d_type = getType(fullPath + d_name, dent->d_type);
@@ -219,7 +219,7 @@ namespace
                 std::string const filePath(fullPath + d_name);
                 char buf[PATH_MAX];
                 ssize_t sz = PATH_MAX - 1;
-                if ((sz = readlink(filePath.c_str(), buf, sz)) == -1)
+                if ((sz = readlink(filePath.c_str(), buf, size_t(sz))) == -1)
                 {
                     // Ignore invalid symbolic links
                     continue;
