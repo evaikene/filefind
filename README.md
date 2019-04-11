@@ -35,7 +35,7 @@ File content filters use regex(7) regular expressions.
 Exclude filters exclude directories, file names or content from the subset
 of files that matches include filters.
 
-The `--all` option allows printing all the matching files in a file with the
+The `--all` option allows printing all the matching lines in a file with the
 matching line number and content. Can only be used if the content filter
 is not empty and exclude content filter is empty.
 
