@@ -11,12 +11,14 @@ public:
     inline String(char const * s, bool nc = false)
         : m_noCase(nc)
         , m_no(false)
+        , m_list(false)
     {
         setValue(s != nullptr ? std::string(s) : std::string());
     }
     inline String(std::string const & s, bool nc = false)
         : m_noCase(nc)
         , m_no(false)
+        , m_list(false)
     {
         setValue(s);
     }
@@ -24,6 +26,7 @@ public:
         : std::string(o)
         , m_noCase(o.m_noCase)
         , m_no(o.m_no)
+        , m_list(o.m_list)
     {}
 
     inline String & operator= (String const & o)
@@ -33,6 +36,7 @@ public:
             std::string::operator= (o);
             m_noCase = o.m_noCase;
             m_no = o.m_no;
+            m_list = o.m_list;
         }
         return *this;
     }
@@ -45,15 +49,24 @@ public:
     {
         return m_no;
     }
+    inline bool list() const
+    {
+        return m_list;
+    }
 
 private:
 
     bool m_noCase;
     bool m_no;
+    bool m_list;
 
     inline void setValue(std::string const & s)
     {
-        if (!s.empty() && '!' == s.at(0))
+        if (!s.empty() && '@' == s.at(0)) {
+            std::string::assign(s);
+            m_list = true;
+        }
+        else if (!s.empty() && '!' == s.at(0))
         {
             std::string::assign(s, 1, std::string::npos);
             m_no = true;
