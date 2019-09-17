@@ -4,9 +4,7 @@ A simple command line tool that combines basic functionality of find and grep.
 # Usage
 `filefind [args] [path]`
 
-where `path` is an optional path to start searching. Uses the current working
-directory if no `path` is given. Without any filter arguments, uses `path` as
-the name filter and searches for it in the current directory.
+where `path` is an optional path to start searching. Uses the current working directory if no `path` is given. Without any filter arguments, uses `path` as the name filter and searches for it in the current directory.
 
 ```
 args:
@@ -29,18 +27,36 @@ args:
                         for some other commands
 ```
 
-File and directory name filters use the fnmatch(3) shell wildcard patterns.
-File content filters use regex(7) regular expressions.
+File and directory name filters use the fnmatch(3) shell wildcard patterns. File content filters use regex(7) regular expressions.
 
-Exclude filters exclude directories, file names or content from the subset
-of files that matches include filters.
+Exclude filters exclude directories, file names or content from the subset of files that matches include filters.
 
-The `--all` option allows printing all the matching lines in a file with the
-matching line number and content. Can only be used if the content filter
-is not empty and exclude content filter is empty.
+The `--all` option allows printing all the matching lines in a file with the matching line number and content. Can only be used if the content filter is not empty and exclude content filter is empty.
 
-Filters can be prefixed with the `--not` argument to make them exclude filters.
-The same can be achieved by prefixing the filter string itself with `'!'`
+Filters can be prefixed with the `--not` argument to make them exclude filters. The same can be achieved by prefixing the filter string itself with `'!'`
+
+File name filters can be built using predefined lists in a configuration file. These start with `'@'` followed by a name of the list. For example, the following configuration file section defines a list of C++ source files:
+
+```
+[@cpp]
+*.cpp
+*.h
+*.C
+*.H
+```
+# Configuration files
+
+The application tries to use the user's configuration file "~/.config/filefind". If this is not found, tries to open the global configuration file "/etc/filefind".
+
+The configuration file is a simple ini-like file with sections and values, where every value is on a separate line. Empty lines and lines startng with `'#'` or `';'` are ignored.
+
+At this moment the configuration file is used to defined globally included or exluded directory names in the `[dirs]` section. For example, the following `[dirs]` section would always ignore directories `.git` and `.svn`:
+```
+[dirs]
+!.git
+!.svn
+```
+Additional sections in the configuration file are used to define file name lists that can be used with the `--[i]name` command line parameter.
 
 # Examples
 
@@ -50,6 +66,7 @@ or "unittest"
 
 ```
 > filefind ~/src/ --name "*.cpp" --name "*.h" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
+> filefind ~/src/ --name "@cpp" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ -f "*.cpp" -f "*.h" -c "MConfig" -d '!unit-tests' -d '!unittest'
 ```
 
