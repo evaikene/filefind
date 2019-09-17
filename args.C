@@ -1,4 +1,5 @@
 #include "args.H"
+#include "config.H"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +76,7 @@ namespace
         { nullptr,      0,                  nullptr, 0 }
     };
 
+    char const * const CONFIG_FILE_NAME = "filefind";
 }
 
 void Args::printUsage(bool err, char const * appName)
@@ -90,6 +92,22 @@ Args::Args(int argc, char ** argv)
     , m_noColor(false)
     , m_extraContent(0)
 {
+    // Use the configuration file for initial values
+    {
+        Config config(CONFIG_FILE_NAME);
+        if (config.valid()) {
+            StringList const values = config.values("dirs");
+            StringList::const_iterator it = values.begin();
+            for (; it != values.end(); ++it) {
+                if (!it->no()) {
+                    m_inDirs.push_back(*it);
+                }
+                else {
+                    m_exDirs.push_back(*it);
+                }
+            }
+        }
+    }
     char const * appName = argv[0];
     int c = 0;
     int idx = 0;

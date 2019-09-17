@@ -65,6 +65,7 @@ private:
     }
 };
 
+typedef std::list<String> StringList;
 
 class Args
 {
