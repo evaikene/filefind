@@ -9,9 +9,11 @@
 /**
  * @brief The configuration class
  *
- * Loads configuration values from external configuration files (in the following order):
- *   ~/.config/<fileName>
- *   /etc/<fileName>
+ * Loads configuration values from an external configuration file.
+ * If a full path is given, uses the specific configuration file.
+ * If only a file name is given, searches for the specified file in the following locations:
+ *   ~/.config/
+ *   /etc/
  *
  * The configuration file has sections followed by a number of values.
  * For example:
@@ -29,7 +31,7 @@ class Config
 {
 public:
 
-    Config(std::string const & fileName);
+    Config(std::string const & fileName, std::string const & fullPath = std::string());
     inline ~Config()
     {}
 
@@ -50,7 +52,7 @@ protected:
     bool _valid;
     SectionsMap _sections;
 
-    bool loadConfig(std::string const & fileName);
+    bool loadConfig(std::string const & fileName, std::string const & fullPath);
 
     static std::string getLocalConfig(std::string const & fileName);
     static std::string getSystemConfig(std::string const & fileName);

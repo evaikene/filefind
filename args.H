@@ -4,6 +4,8 @@
 #include <string>
 #include <list>
 
+class Config;
+
 class String : public std::string
 {
 public:
@@ -145,6 +147,13 @@ public:
 private:
 
     static void printUsage(bool err, char const * appName);
+
+    static void addFilters(Config const & config,
+                           String const & list,
+                           bool no,
+                           bool ic,
+                           std::list<String> & in,
+                           std::list<String> & ex);
 
     bool m_valid;
 

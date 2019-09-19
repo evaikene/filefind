@@ -3,10 +3,10 @@
 #include <sstream>
 #include <fstream>
 
-Config::Config(std::string const & fileName)
+Config::Config(std::string const & fileName, std::string const & fullPath)
     : _valid(false)
 {
-    _valid = loadConfig(fileName);
+    _valid = loadConfig(fileName, fullPath);
 }
 
 StringList Config::values(std::string const & section) const
@@ -18,14 +18,22 @@ StringList Config::values(std::string const & section) const
     return it->second;
 }
 
-bool Config::loadConfig(std::string const & fileName)
+bool Config::loadConfig(std::string const & fileName, std::string const & fullPath)
 {
     std::ifstream f;
-    f.open(getLocalConfig(fileName).c_str());
-    if (!f.is_open()) {
-        f.open(getSystemConfig(fileName).c_str());
+    if (!fullPath.empty()) {
+        f.open(fullPath.c_str());
         if (!f.is_open()) {
             return false;
+        }
+    }
+    else {
+        f.open(getLocalConfig(fileName).c_str());
+        if (!f.is_open()) {
+            f.open(getSystemConfig(fileName).c_str());
+            if (!f.is_open()) {
+                return false;
+            }
         }
     }
 

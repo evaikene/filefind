@@ -50,13 +50,13 @@ The application tries to use the user's configuration file "~/.config/filefind".
 
 The configuration file is a simple ini-like file with sections and values, where every value is on a separate line. Empty lines and lines startng with `'#'` or `';'` are ignored.
 
-At this moment the configuration file is used to defined globally included or exluded directory names in the `[dirs]` section. For example, the following `[dirs]` section would always ignore directories `.git` and `.svn`:
+The configuration file can be used to defined globally included or exluded directory names in the `[dirs]` section and globally included or excluded file names in the `[files]` section. For example, the following `[dirs]` section would always ignore directories `.git` and `.svn`:
 ```
 [dirs]
 !.git
 !.svn
 ```
-Additional sections in the configuration file are used to define file name lists that can be used with the `--[i]name` command line parameter.
+Additional sections in the configuration file are used to define lists that can be used with `--[i]name`, `--[i]dir` and `--[i]content` command line parameters.
 
 # Examples
 

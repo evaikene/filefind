@@ -47,10 +47,9 @@ namespace
         "Filters can be prefixed with the --not argument to make them exclude filters.\n"
         "The same can be achieved by prefixing the filter string itself with \'!\'\n"
         "\n"
-        "File name filters can be built using predefined lists in a configuration file.\n"
+        "All the filters can be built using predefined lists in a configuration file.\n"
         "These start with \'@\' followed by a name of the list. For example, the following\n"
-        "configuration file section defines a list of C++ source\n"
-        "files:\n"
+        "configuration file section defines a list of C++ source files:\n"
         "\n"
         "[@cpp]\n"
         "*.cpp\n"
@@ -59,13 +58,16 @@ namespace
         "*.H\n"
         "\n"
         "The application tries to use the user\'s configuration file \"~/.config/filefind\". If this is\n"
-        "not found, tries to open the global configuration file \"/etc/filefind\"\n"
+        "not found, tries to open the global configuration file \"/etc/filefind\".\n"
+        "\n"
+        "To use a specific configuration file, specify the full path of the file in the\n"
+        "FILEFIND_CONFIG environment variable."
         "\n"
         "EXAMPLES:\n"
         "\n"
         "Search for \"*.C\" files in the directory \"~/src/TMTC\" containing the string\n"
         "\"MISCconfig\" excluding directories with names that contain \"unit-tests\"\n"
-        "or \"unittest\"\n"
+        "or \"unittest\":\n"
         "\n"
         "> %1$s ~/src/TMTC --name \"*.C\" --content \"MISCconfig\" --not --dir \"unit-tests\" --not --dir \"unittest\"\n"
         "> %1$s ~/src/TMTC -f \"*.C\" -c \"MISCconfig\" -d \'!unit-tests\' -d \'!unittest\'\n"
@@ -95,6 +97,7 @@ namespace
         { nullptr,      0,                  nullptr, 0 }
     };
 
+    char const * const CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
     char const * const CONFIG_FILE_NAME = "filefind";
 }
 
@@ -112,18 +115,37 @@ Args::Args(int argc, char ** argv)
     , m_extraContent(0)
 {
     // Use the configuration file for initial values
-    Config config(CONFIG_FILE_NAME);
+    char const * configFileName = getenv(CONFIG_FILE_NAME_ENV);
+    Config config(CONFIG_FILE_NAME, configFileName != nullptr ? configFileName : std::string());
     if (config.valid()) {
-        StringList const values = config.values("dirs");
-        StringList::const_iterator it = values.begin();
-        for (; it != values.end(); ++it) {
-            if (!it->no()) {
-                m_inDirs.push_back(*it);
-            }
-            else {
-                m_exDirs.push_back(*it);
+
+        // Predefined directory filters
+        {
+            StringList const values = config.values("dirs");
+            StringList::const_iterator it = values.begin();
+            for (; it != values.end(); ++it) {
+                if (!it->no()) {
+                    m_inDirs.push_back(*it);
+                }
+                else {
+                    m_exDirs.push_back(*it);
+                }
             }
         }
+        // Predefined file name filters
+        {
+            StringList const values = config.values("files");
+            StringList::const_iterator it = values.begin();
+            for (; it != values.end(); ++it) {
+                if (!it->no()) {
+                    m_inFiles.push_back(*it);
+                }
+                else {
+                    m_exFiles.push_back(*it);
+                }
+            }
+        }
+
     }
 
     char const * appName = argv[0];
@@ -171,63 +193,52 @@ Args::Args(int argc, char ** argv)
                 break;
             }
             case 'c':
-            case 'C':
-            {
-                String const s(optarg, isupper(c));
-                no |= s.no();
-                if (!no)
-                {
-                    m_inContent.push_back(s);
+            case 'C': {
+                bool const ic = isupper(c);
+                String const s(optarg, ic);
+                if (s.list()) {
+                    // This is a list definition; get content filters from the configuration
+                    addFilters(config, s, no, ic, m_inContent, m_exContent);
                 }
-                else
-                {
-                    m_exContent.push_back(s);
-                    no = false;
+                else {
+                    no |= s.no();
+                    if (!no) {
+                        m_inContent.push_back(s);
+                    }
+                    else {
+                        m_exContent.push_back(s);
+                        no = false;
+                    }
                 }
                 break;
             }
             case 'd':
-            case 'D':
-            {
-                String const s(optarg, isupper(c));
-                no |= s.no();
-                if (!no)
-                {
-                    m_inDirs.push_back(s);
+            case 'D': {
+                bool const ic = isupper(c);
+                String const s(optarg, ic);
+                if (s.list()) {
+                    // This is a list definition; get directory names from the configuration
+                    addFilters(config, s, no, ic, m_inDirs, m_exDirs);
                 }
-                else
-                {
-                    m_exDirs.push_back(s);
-                    no = false;
+                else {
+                    no |= s.no();
+                    if (!no) {
+                        m_inDirs.push_back(s);
+                    }
+                    else {
+                        m_exDirs.push_back(s);
+                        no = false;
+                    }
                 }
                 break;
             }
             case 'f':
-            case 'F':
-            {
+            case 'F': {
                 bool const ic = isupper(c);
                 String const s(optarg, ic);
                 if (s.list()) {
                     // This is a list definition; get file names from the configuration
-                    if (!config.valid()) {
-                        fprintf(stderr, "No configuration found with list definitions\n");
-                        break;
-                    }
-                    StringList const values = config.values(s);
-                    if (values.empty()) {
-                        fprintf(stderr, "List @%s is empty or not found\n", s.c_str());
-                        break;
-                    }
-                    StringList::const_iterator it = values.begin();
-                    for (; it != values.end(); ++it) {
-                        no |= it->no();
-                        if (!no) {
-                            m_inFiles.push_back(String(*it, ic));
-                        }
-                        else {
-                            m_exFiles.push_back(String(*it, ic));
-                        }
-                    }
+                    addFilters(config, s, no, ic, m_inFiles, m_exFiles);
                 }
                 else {
                     // This is an individual file name from the command line
@@ -296,4 +307,32 @@ Args::Args(int argc, char ** argv)
     }
 
     m_valid = true;
+}
+
+void Args::addFilters(Config const & config,
+                      String const & list,
+                      bool no,
+                      bool ic,
+                      std::list<String> & in,
+                      std::list<String> & ex)
+{
+    if (!config.valid()) {
+        fprintf(stderr, "No configuration found with list definitions\n");
+        return;
+    }
+    StringList const values = config.values(list);
+    if (values.empty()) {
+        fprintf(stderr, "List @%s is empty or not found\n", list.c_str());
+        return;
+    }
+    StringList::const_iterator it = values.begin();
+    for (; it != values.end(); ++it) {
+        no |= it->no();
+        if (!no) {
+            in.push_back(String(*it, ic));
+        }
+        else {
+            ex.push_back(String(*it, ic));
+        }
+    }
 }
