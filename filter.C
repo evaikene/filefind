@@ -1,5 +1,4 @@
 #include "filter.H"
-#include "regex.H"
 #include "args.H"
 #include "error.H"
 
@@ -10,15 +9,19 @@ Filter::Filter(Args const & args)
 {
     // Build content filters
     std::list<String>::const_iterator it = m_args.includeContent().begin();
-    for (; it != m_args.includeContent().end(); ++it)
-    {
-        m_inContent.push_back(boost::shared_ptr<Regex>(new Regex(*it)));
+    for (; it != m_args.includeContent().end(); ++it) {
+        m_inContent.push_back(Regex::Ptr(new Regex(*it)));
     }
     it = m_args.excludeContent().begin();
-    for (; it != m_args.excludeContent().end(); ++it)
-    {
-        m_exContent.push_back(boost::shared_ptr<Regex>(new Regex(*it)));
+    for (; it != m_args.excludeContent().end(); ++it) {
+        m_exContent.push_back(Regex::Ptr(new Regex(*it)));
     }
+}
+
+Filter::~Filter()
+{
+    m_inContent.clear();
+    m_exContent.clear();
 }
 
 bool Filter::matchDir(std::string const & name) const
@@ -27,11 +30,9 @@ bool Filter::matchDir(std::string const & name) const
 
     // Include filters
     std::list<String>::const_iterator it = m_args.includeDirs().begin();
-    for (; !match && it != m_args.includeDirs().end(); ++it)
-    {
+    for (; !match && it != m_args.includeDirs().end(); ++it) {
         int const rval = fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH)
-        {
+        if (rval != 0 && rval != FNM_NOMATCH) {
             ERROR("Invalid pattern \"%s\" : %m", it->c_str());
         }
         match = (rval == 0);
@@ -46,11 +47,9 @@ bool Filter::excludeDir(std::string const & name) const
 
     // Exclude filters
     std::list<String>::const_iterator it = m_args.excludeDirs().begin();
-    for (; !match && it != m_args.excludeDirs().end(); ++it)
-    {
+    for (; !match && it != m_args.excludeDirs().end(); ++it) {
         int const rval = fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH)
-        {
+        if (rval != 0 && rval != FNM_NOMATCH) {
             ERROR("Invalid pattern \"%s\" : %m", it->c_str());
         }
         match = (rval == 0);
@@ -65,11 +64,9 @@ bool Filter::matchFile(std::string const & name) const
 
     // Include filters
     std::list<String>::const_iterator it = m_args.includeFiles().begin();
-    for (; !match && it != m_args.includeFiles().end(); ++it)
-    {
+    for (; !match && it != m_args.includeFiles().end(); ++it) {
         int const rval = fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH)
-        {
+        if (rval != 0 && rval != FNM_NOMATCH) {
             ERROR("Invalid pattern \"%s\" : %m", it->c_str());
         }
         match = (rval == 0);
@@ -77,11 +74,9 @@ bool Filter::matchFile(std::string const & name) const
 
     // Exclude filters
     it = m_args.excludeFiles().begin();
-    for (; match && it != m_args.excludeFiles().end(); ++it)
-    {
+    for (; match && it != m_args.excludeFiles().end(); ++it) {
         int const rval =fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH)
-        {
+        if (rval != 0 && rval != FNM_NOMATCH) {
             ERROR("Invalid pattern \"%s\" : %m", it->c_str());
         }
         match = (rval == FNM_NOMATCH);
@@ -110,9 +105,8 @@ bool Filter::matchContent(std::string const & line, regmatch_t * pmatch) const
     bool match = m_inContent.empty();
 
     // Include filters
-    std::list<boost::shared_ptr<Regex> >::const_iterator it = m_inContent.begin();
-    for (; !match && it != m_inContent.end(); ++it)
-    {
+    Regex::PtrList::const_iterator it = m_inContent.begin();
+    for (; !match && it != m_inContent.end(); ++it) {
         match = (*it)->match(line, pmatch);
     }
     return match;
@@ -123,9 +117,8 @@ bool Filter::excludeContent(std::string const & line) const
     bool exclude = false;
 
     // Exclude filters
-    std::list<boost::shared_ptr<Regex> >::const_iterator it = m_exContent.begin();
-    for (; !exclude && it != m_exContent.end(); ++it)
-    {
+    Regex::PtrList::const_iterator it = m_exContent.begin();
+    for (; !exclude && it != m_exContent.end(); ++it) {
         exclude = (*it)->match(line);
     }
     return exclude;

@@ -10,8 +10,7 @@ Regex::Regex(String const & r)
 {
     int const rval = regcomp(&m_preg, r.c_str(), REG_EXTENDED + (r.noCase() ? REG_ICASE : 0));
     m_valid = (rval == 0);
-    if (!m_valid)
-    {
+    if (!m_valid) {
         char buf[256];
         regerror(rval, &m_preg, buf, sizeof(buf));
         throw Error(std::string(buf));
@@ -20,17 +19,17 @@ Regex::Regex(String const & r)
 
 Regex::~Regex()
 {
-    regfree(&m_preg);
+    if (m_valid) {
+        regfree(&m_preg);
+    }
 }
 
 bool Regex::match(std::string const & s, regmatch_t * pmatch) const
 {
     bool rval = false;
-    if (m_valid)
-    {
+    if (m_valid) {
         size_t nmatch = 0;
-        if (pmatch != nullptr)
-        {
+        if (pmatch != nullptr) {
             nmatch = 1;
             bzero(pmatch, sizeof(regmatch_t));
         }

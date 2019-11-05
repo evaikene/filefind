@@ -2,6 +2,8 @@
 #define __REGEX_H
 
 #include <string>
+#include <list>
+#include <memory>
 
 #include <regex.h>
 
@@ -10,6 +12,9 @@ class String;
 class Regex
 {
 public:
+    
+    typedef std::unique_ptr<Regex> Ptr;
+    typedef std::list<Ptr> PtrList;
 
     Regex(String const & r);
     ~Regex();
