@@ -16,6 +16,15 @@
 #include <sys/syslimits.h>
 #endif
 
+#if defined(_AIX)
+// struct dirent on AIX does not have the d_type field nor defines for its values
+#include <sys/vnode.h>
+#define DT_UNKNOWN 0
+#define DT_DIR 2
+#define DT_REG 3
+#define DT_LNK 10
+#endif
+
 namespace
 {
     void _closedir(DIR * d)
@@ -149,10 +158,28 @@ namespace
     {
         unsigned char rval = d;
         if (d == DT_UNKNOWN) {
+#if defined(_AIX)
+	    struct stat sb;
+        if (stat(pathname.c_str(), &sb) == 0) {
+            switch (sb.st_type) {
+            case VREG:
+                rval = DT_REG;
+                break;
+            case VDIR:
+                rval = DT_DIR;
+                break;
+            case VLNK:
+                rval = DT_LNK;
+                break;
+            default:;
+            }
+	    }
+#else
             struct stat sb;
             if (lstat(pathname.c_str(), &sb) == 0) {
                 rval = IFTODT(sb.st_mode);
             }
+#endif
         }
         return rval;
     }
@@ -182,9 +209,13 @@ namespace
         struct dirent const * dent = nullptr;
         while ((dent = readdir(dir.get())) != nullptr) {
             char const * d_name = dent->d_name;
+#if defined(_AIX)
+            unsigned char const d_type = getType(fullPath + d_name, DT_UNKNOWN);
+#else
             unsigned char const d_type = getType(fullPath + d_name, dent->d_type);
+#endif
 
-            if (DT_LNK == dent->d_type) {
+            if (DT_LNK == d_type) {
                 if (!filter.matchFile(d_name)) {
                     // Skip symbolic links that do not match the file name filter
                     continue;

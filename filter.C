@@ -4,6 +4,11 @@
 
 #include <fnmatch.h>
 
+#if defined(_AIX)
+// No FNM_CASEFOLD on AIX
+#define FNM_CASEFOLD 0
+#endif
+
 Filter::Filter(Args const & args)
     : m_args(args)
 {

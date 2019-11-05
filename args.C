@@ -32,7 +32,13 @@ namespace
         "                        or file content filter making it an exclude filter\n"
         "  -o, --nocolor         do not highlight search results with colors\n"
         "                        useful when the search results is used as an input\n"
-        "                        for some other commands"
+        "                        for some other commands\n"
+    #if defined(_AIX)
+        "\n"
+        "NB! On AIX only short options are supported. File and directory name filters are\n"
+        "always case sensitive.\n"
+    #endif
+        "\n"
         "\n"
         "File and directory name filters use the fnmatch(3) shell wildcard patterns.\n"
         "File content filters use regex(7) regular expressions.\n"
@@ -61,7 +67,7 @@ namespace
         "not found, tries to open the global configuration file \"/etc/filefind\".\n"
         "\n"
         "To use a specific configuration file, specify the full path of the file in the\n"
-        "FILEFIND_CONFIG environment variable."
+        "FILEFIND_CONFIG environment variable.\n"
         "\n"
         "EXAMPLES:\n"
         "\n"
@@ -79,6 +85,7 @@ namespace
         "\n";
 
     char const * const shortOpts = ":aAc:C:d:D:e:E:f:F:hno";
+    #if !defined(_AIX)
     struct option const longOpts[] =
     {
         { "all",        no_argument,        nullptr, 'a' },
@@ -96,6 +103,7 @@ namespace
         { "nocolor",    no_argument,        nullptr, 'o' },
         { nullptr,      0,                  nullptr, 0 }
     };
+    #endif
 
     char const * const CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
     char const * const CONFIG_FILE_NAME = "filefind";
@@ -152,22 +160,21 @@ Args::Args(int argc, char ** argv)
     int c = 0;
     int idx = 0;
     bool no = false;
-    while ((c = getopt_long(argc, argv, shortOpts, longOpts, &idx)) != -1)
-    {
-        switch (c)
-        {
-            case 'h':
-            {
+#if defined(_AIX)
+    while ((c = getopt(argc, argv, shortOpts)) != -1) {
+#else
+    while ((c = getopt_long(argc, argv, shortOpts, longOpts, &idx)) != -1) {
+#endif
+        switch (c) {
+            case 'h': {
                 printUsage(false, appName);
                 return;
             }
-            case 'a':
-            {
+            case 'a': {
                 m_allContent = true;
                 break;
             }
-            case 'e':
-            {
+            case 'e': {
                 char * e = nullptr;
                 m_extraContent = int(strtol(optarg, &e, 10));
                 if (e == nullptr || *e != '\0')
@@ -177,18 +184,15 @@ Args::Args(int argc, char ** argv)
                 }
                 break;
             }
-            case 'E':
-            {
+            case 'E': {
                 m_exec = optarg;
                 break;
             }
-            case 'A':
-            {
+            case 'A': {
                 m_ascii = true;
                 break;
             }
-            case 'n':
-            {
+            case 'n': {
                 no = true;
                 break;
             }
@@ -253,19 +257,16 @@ Args::Args(int argc, char ** argv)
                 }
                 break;
             }
-            case 'o':
-            {
+            case 'o': {
                 m_noColor = true;
                 break;
             }
-            case ':':
-            {
+            case ':': {
                 fprintf(stderr, "Missing argument\n\n");
                 printUsage(true, appName);
                 return;
             }
-            default:
-            {
+            default: {
                 fprintf(stderr, "Invalid option\n\n");
                 printUsage(true, appName);
                 return;
@@ -273,35 +274,28 @@ Args::Args(int argc, char ** argv)
         }
     }
 
-    if (optind < argc)
-    {
-        if (m_inFiles.empty() && m_exFiles.empty())
-        {
+    if (optind < argc) {
+        if (m_inFiles.empty() && m_exFiles.empty()) {
             m_inFiles.push_back(argv[optind]);
         }
-        else
-        {
+        else {
             m_path = argv[optind];
             // Remove trailing slashes
-            while (m_path.size() > 1 && m_path.at(m_path.size() - 1) == '/')
-            {
+            while (m_path.size() > 1 && m_path.at(m_path.size() - 1) == '/') {
                 m_path.resize(m_path.size() - 1);
             }
         }
     }
 
-    if (m_allContent && m_inContent.empty())
-    {
+    if (m_allContent && m_inContent.empty()) {
         fprintf(stderr, "--all option is only allowed if the content filter is not empty.\n");
         return;
     }
-    if (m_extraContent > 0 && !m_allContent)
-    {
+    if (m_extraContent > 0 && !m_allContent) {
         fprintf(stderr, "--extra option is only allowed with the --all option.\n");
         return;
     }
-    if (!m_exec.empty() && m_allContent)
-    {
+    if (!m_exec.empty() && m_allContent) {
         fprintf(stderr, "--exec option cannot be used with the --all option.\n");
         return;
     }
