@@ -1,7 +1,6 @@
 #include "config.H"
 
-#include <sstream>
-#include <fstream>
+#include <stdio.h>
 
 Config::Config(std::string const & fileName, std::string const & fullPath)
     : _valid(false)
@@ -20,18 +19,18 @@ StringList Config::values(std::string const & section) const
 
 bool Config::loadConfig(std::string const & fileName, std::string const & fullPath)
 {
-    std::ifstream f;
+    FILE * f = nullptr;
     if (!fullPath.empty()) {
-        f.open(fullPath.c_str());
-        if (!f.is_open()) {
+        f = fopen(fullPath.c_str(), "r");
+        if (f == nullptr) {
             return false;
         }
     }
     else {
-        f.open(getLocalConfig(fileName).c_str());
-        if (!f.is_open()) {
-            f.open(getSystemConfig(fileName).c_str());
-            if (!f.is_open()) {
+        f = fopen(getLocalConfig(fileName).c_str(), "r");
+        if (f == nullptr) {
+            f = fopen(getSystemConfig(fileName).c_str(), "r");
+            if (f == nullptr) {
                 return false;
             }
         }
@@ -41,8 +40,9 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
     _sections[std::string()] = StringList();
     StringList * section = &_sections[std::string()];
 
-    std::string line;
-    while (std::getline(f, line)) {
+    char buf[1024];
+    while (fgets(buf, sizeof(buf), f) != nullptr) {
+        std::string line(buf);
 
         // Trim leading and trailing whitespace
         trim(line);
@@ -70,6 +70,7 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
         // Must be a value belonging to the currently active section
         section->push_back(line);
     }
+    fclose(f);
 
     return true;
 }
