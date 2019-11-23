@@ -46,7 +46,7 @@ namespace
         "Exclude filters exclude directories, file names or content from the subset\n"
         "of files that matches include filters.\n"
         "\n"
-        "The --all option allows printing all the matching files in a file with the\n"
+        "The --all option allows printing all the matching lines in a file with the\n"
         "matching line number and content. Can only be used if the content filter\n"
         "is not empty and exclude content filter is empty.\n"
         "\n"
