@@ -11,24 +11,24 @@ class String : public std::string
 public:
 
     inline String(char const * s, bool nc = false)
-        : m_noCase(nc)
-        , m_no(false)
-        , m_list(false)
+        : _noCase(nc)
+        , _no(false)
+        , _list(false)
     {
         setValue(s != nullptr ? std::string(s) : std::string());
     }
     inline String(std::string const & s, bool nc = false)
-        : m_noCase(nc)
-        , m_no(false)
-        , m_list(false)
+        : _noCase(nc)
+        , _no(false)
+        , _list(false)
     {
         setValue(s);
     }
     inline explicit String(String const & o)
         : std::string(o)
-        , m_noCase(o.m_noCase)
-        , m_no(o.m_no)
-        , m_list(o.m_list)
+        , _noCase(o._noCase)
+        , _no(o._no)
+        , _list(o._list)
     {}
 
     inline String & operator= (String const & o)
@@ -36,42 +36,42 @@ public:
         if (this != &o)
         {
             std::string::operator= (o);
-            m_noCase = o.m_noCase;
-            m_no = o.m_no;
-            m_list = o.m_list;
+            _noCase = o._noCase;
+            _no = o._no;
+            _list = o._list;
         }
         return *this;
     }
 
     inline bool noCase() const
     {
-        return m_noCase;
+        return _noCase;
     }
     inline bool no() const
     {
-        return m_no;
+        return _no;
     }
     inline bool list() const
     {
-        return m_list;
+        return _list;
     }
 
 private:
 
-    bool m_noCase;
-    bool m_no;
-    bool m_list;
+    bool _noCase;
+    bool _no;
+    bool _list;
 
     inline void setValue(std::string const & s)
     {
         if (!s.empty() && '@' == s.at(0)) {
             std::string::assign(s);
-            m_list = true;
+            _list = true;
         }
         else if (!s.empty() && '!' == s.at(0))
         {
             std::string::assign(s, 1, std::string::npos);
-            m_no = true;
+            _no = true;
         }
         else
         {
@@ -92,56 +92,56 @@ public:
 
     inline bool valid() const
     {
-        return m_valid;
+        return _valid;
     }
 
     inline std::string const & path() const
     {
-        return m_path;
+        return _path;
     }
     inline std::list<String> const & includeFiles() const
     {
-        return m_inFiles;
+        return _inFiles;
     }
     inline std::list<String> const & excludeFiles() const
     {
-        return m_exFiles;
+        return _exFiles;
     }
     inline std::list<String> const & includeDirs() const
     {
-        return m_inDirs;
+        return _inDirs;
     }
     inline std::list<String> const & excludeDirs() const
     {
-        return m_exDirs;
+        return _exDirs;
     }
     inline std::list<String> const & includeContent() const
     {
-        return m_inContent;
+        return _inContent;
     }
     inline std::list<String> const & excludeContent() const
     {
-        return m_exContent;
+        return _exContent;
     }
     inline bool allContent() const
     {
-        return m_allContent;
+        return _allContent;
     }
     inline int extraContent() const
     {
-        return m_extraContent;
+        return _extraContent;
     }
     inline bool ascii() const
     {
-        return m_ascii;
+        return _ascii;
     }
     inline bool noColor() const
     {
-        return m_noColor;
+        return _noColor;
     }
     inline std::string const & execCmd() const
     {
-        return m_exec;
+        return _exec;
     }
 
 private:
@@ -155,21 +155,20 @@ private:
                            std::list<String> & in,
                            std::list<String> & ex);
 
-    bool m_valid;
+    bool _valid;
 
-    std::string m_path;
-    std::list<String> m_inFiles;
-    std::list<String> m_exFiles;
-    std::list<String> m_inDirs;
-    std::list<String> m_exDirs;
-    std::list<String> m_inContent;
-    std::list<String> m_exContent;
-    bool m_allContent;
-    bool m_ascii;
-    bool m_noColor;
-    int m_extraContent;
-    std::string m_exec;
+    std::string _path;
+    std::list<String> _inFiles;
+    std::list<String> _exFiles;
+    std::list<String> _inDirs;
+    std::list<String> _exDirs;
+    std::list<String> _inContent;
+    std::list<String> _exContent;
+    bool _allContent;
+    bool _ascii;
+    bool _noColor;
+    int _extraContent;
+    std::string _exec;
 };
 
 #endif // ARGS_H
-

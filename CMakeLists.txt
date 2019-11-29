@@ -2,8 +2,24 @@ project (filefind CXX)
 cmake_minimum_required (VERSION 3.7)
 set (CMAKE_CXX_STANDARD_REQUIRED 11)
 set (CMAKE_CXX_STANDARD 11)
-FILE (GLOB HDRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.H)
-FILE (GLOB SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+
+set (HDRS
+    args.H
+    cmdline.H
+    config.H
+    error.H
+    filter.H
+    regex.H
+)
+set (SRCS
+    args.C
+    cmdline.C
+    config.C
+    filter.C
+    main.C
+    regex.C
+)
+
 add_executable (${PROJECT_NAME} ${HDRS} ${SRCS})
 if (AIX)
     target_compile_options (${PROJECT_NAME} PRIVATE -maix64 -pthread)

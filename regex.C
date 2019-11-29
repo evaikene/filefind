@@ -31,11 +31,7 @@ bool Regex::match(std::string const & s, regmatch_t * pmatch) const
         size_t nmatch = 0;
         if (pmatch != nullptr) {
             nmatch = 1;
-#if defined(_AIX)
-	    memset(pmatch, 0, sizeof(regmatch_t));
-#else
-            bzero(pmatch, sizeof(regmatch_t));
-#endif
+            memset(pmatch, 0, sizeof(regmatch_t));
         }
         rval = (regexec(&m_preg, s.c_str(), nmatch, pmatch, 0) == 0);
     }

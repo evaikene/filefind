@@ -1,10 +1,10 @@
 #include "args.H"
+#include "cmdline.H"
 #include "config.H"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <getopt.h>
 
 namespace
 {
@@ -35,8 +35,8 @@ namespace
         "                        for some other commands\n"
     #if defined(_AIX)
         "\n"
-        "NB! On AIX only short options are supported. File and directory name filters are\n"
-        "always case sensitive.\n"
+        "NB! File and directory name filters are always case sensitive on IBM PASE for i\n"
+        "due to the fnmatch(3) limitations.\n"
     #endif
         "\n"
         "\n"
@@ -84,26 +84,23 @@ namespace
         "> %1$s ~/src/TMTC --name \"@cpp\" --content \"MISCconfig\"\n"
         "\n";
 
-    char const * const shortOpts = ":aAc:C:d:D:e:E:f:F:hno";
-    #if !defined(_AIX)
-    struct option const longOpts[] =
+    CmdLineOption const opts[] =
     {
-        { "all",        no_argument,        nullptr, 'a' },
-        { "ascii",      no_argument,        nullptr, 'A' },
-        { "content",    required_argument,  nullptr, 'c' },
-        { "icontent",   required_argument,  nullptr, 'C' },
-        { "dir",        required_argument,  nullptr, 'd' },
-        { "idir",       required_argument,  nullptr, 'D' },
-        { "name",       required_argument,  nullptr, 'f' },
-        { "iname",      required_argument,  nullptr, 'F' },
-        { "help",       no_argument,        nullptr, 'h' },
-        { "not",        no_argument,        nullptr, 'n' },
-        { "extra",      required_argument,  nullptr, 'e' },
-        { "exec",       required_argument,  nullptr, 'E' },
-        { "nocolor",    no_argument,        nullptr, 'o' },
-        { nullptr,      0,                  nullptr, 0 }
+        { "all",        CmdLineOption::NoArgument,        'a' },
+        { "ascii",      CmdLineOption::NoArgument,        'A' },
+        { "content",    CmdLineOption::RequiredArgument,  'c' },
+        { "icontent",   CmdLineOption::RequiredArgument,  'C' },
+        { "dir",        CmdLineOption::RequiredArgument,  'd' },
+        { "idir",       CmdLineOption::RequiredArgument,  'D' },
+        { "name",       CmdLineOption::RequiredArgument,  'f' },
+        { "iname",      CmdLineOption::RequiredArgument,  'F' },
+        { "help",       CmdLineOption::NoArgument,        'h' },
+        { "not",        CmdLineOption::NoArgument,        'n' },
+        { "extra",      CmdLineOption::RequiredArgument,  'e' },
+        { "exec",       CmdLineOption::RequiredArgument,  'E' },
+        { "nocolor",    CmdLineOption::NoArgument,        'o' },
+        { nullptr,      CmdLineOption::Null,              0 }
     };
-    #endif
 
     char const * const CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
     char const * const CONFIG_FILE_NAME = "filefind";
@@ -115,12 +112,12 @@ void Args::printUsage(bool err, char const * appName)
 }
 
 Args::Args(int argc, char ** argv)
-    : m_valid(false)
-    , m_path(".")
-    , m_allContent(false)
-    , m_ascii(false)
-    , m_noColor(false)
-    , m_extraContent(0)
+    : _valid(false)
+    , _path(".")
+    , _allContent(false)
+    , _ascii(false)
+    , _noColor(false)
+    , _extraContent(0)
 {
     // Use the configuration file for initial values
     char const * configFileName = getenv(CONFIG_FILE_NAME_ENV);
@@ -133,10 +130,10 @@ Args::Args(int argc, char ** argv)
             StringList::const_iterator it = values.begin();
             for (; it != values.end(); ++it) {
                 if (!it->no()) {
-                    m_inDirs.push_back(*it);
+                    _inDirs.push_back(*it);
                 }
                 else {
-                    m_exDirs.push_back(*it);
+                    _exDirs.push_back(*it);
                 }
             }
         }
@@ -146,10 +143,10 @@ Args::Args(int argc, char ** argv)
             StringList::const_iterator it = values.begin();
             for (; it != values.end(); ++it) {
                 if (!it->no()) {
-                    m_inFiles.push_back(*it);
+                    _inFiles.push_back(*it);
                 }
                 else {
-                    m_exFiles.push_back(*it);
+                    _exFiles.push_back(*it);
                 }
             }
         }
@@ -157,39 +154,36 @@ Args::Args(int argc, char ** argv)
     }
 
     char const * appName = argv[0];
-    int c = 0;
-    int idx = 0;
     bool no = false;
-#if defined(_AIX)
-    while ((c = getopt(argc, argv, shortOpts)) != -1) {
-#else
-    while ((c = getopt_long(argc, argv, shortOpts, longOpts, &idx)) != -1) {
-#endif
-        switch (c) {
+    CmdLine cmdLine(opts);
+    CmdLineArg arg;
+    char const * path = nullptr;
+    while ((arg = cmdLine.next(argc, argv))) {
+        switch (arg.what()) {
             case 'h': {
                 printUsage(false, appName);
                 return;
             }
             case 'a': {
-                m_allContent = true;
+                _allContent = true;
                 break;
             }
             case 'e': {
                 char * e = nullptr;
-                m_extraContent = int(strtol(optarg, &e, 10));
+                _extraContent = int(strtol(arg.opt(), &e, 10));
                 if (e == nullptr || *e != '\0')
                 {
-                    fprintf(stderr, "Invalid value \"%s\"\n", optarg);
+                    fprintf(stderr, "Invalid value \"%s\"\n", arg.opt());
                     return;
                 }
                 break;
             }
             case 'E': {
-                m_exec = optarg;
+                _exec = arg.opt();
                 break;
             }
             case 'A': {
-                m_ascii = true;
+                _ascii = true;
                 break;
             }
             case 'n': {
@@ -198,19 +192,19 @@ Args::Args(int argc, char ** argv)
             }
             case 'c':
             case 'C': {
-                bool const ic = isupper(c);
-                String const s(optarg, ic);
+                bool const ic = isupper(arg.what());
+                String const s(arg.opt(), ic);
                 if (s.list()) {
                     // This is a list definition; get content filters from the configuration
-                    addFilters(config, s, no, ic, m_inContent, m_exContent);
+                    addFilters(config, s, no, ic, _inContent, _exContent);
                 }
                 else {
                     no |= s.no();
                     if (!no) {
-                        m_inContent.push_back(s);
+                        _inContent.push_back(s);
                     }
                     else {
-                        m_exContent.push_back(s);
+                        _exContent.push_back(s);
                         no = false;
                     }
                 }
@@ -218,19 +212,19 @@ Args::Args(int argc, char ** argv)
             }
             case 'd':
             case 'D': {
-                bool const ic = isupper(c);
-                String const s(optarg, ic);
+                bool const ic = isupper(arg.what());
+                String const s(arg.opt(), ic);
                 if (s.list()) {
                     // This is a list definition; get directory names from the configuration
-                    addFilters(config, s, no, ic, m_inDirs, m_exDirs);
+                    addFilters(config, s, no, ic, _inDirs, _exDirs);
                 }
                 else {
                     no |= s.no();
                     if (!no) {
-                        m_inDirs.push_back(s);
+                        _inDirs.push_back(s);
                     }
                     else {
-                        m_exDirs.push_back(s);
+                        _exDirs.push_back(s);
                         no = false;
                     }
                 }
@@ -238,69 +232,74 @@ Args::Args(int argc, char ** argv)
             }
             case 'f':
             case 'F': {
-                bool const ic = isupper(c);
-                String const s(optarg, ic);
+                bool const ic = isupper(arg.what());
+                String const s(arg.opt(), ic);
                 if (s.list()) {
                     // This is a list definition; get file names from the configuration
-                    addFilters(config, s, no, ic, m_inFiles, m_exFiles);
+                    addFilters(config, s, no, ic, _inFiles, _exFiles);
                 }
                 else {
                     // This is an individual file name from the command line
                     no |= s.no();
                     if (!no) {
-                        m_inFiles.push_back(s);
+                        _inFiles.push_back(s);
                     }
                     else {
-                        m_exFiles.push_back(s);
+                        _exFiles.push_back(s);
                         no = false;
                     }
                 }
                 break;
             }
             case 'o': {
-                m_noColor = true;
+                _noColor = true;
                 break;
             }
-            case ':': {
-                fprintf(stderr, "Missing argument\n\n");
+            case CmdLineArg::NO_OPTION: {
+                path = arg.name();
+                break;
+            }
+            case CmdLineArg::REQUIRES_ARGUMENT: {
+                fprintf(stderr, "%s requires an argument\n\n", arg.name());
                 printUsage(true, appName);
                 return;
             }
             default: {
-                fprintf(stderr, "Invalid option\n\n");
+                fprintf(stderr, "Invalid option %s\n\n", arg.name());
                 printUsage(true, appName);
                 return;
             }
         }
     }
 
-    if (optind < argc) {
-        if (m_inFiles.empty() && m_exFiles.empty()) {
-            m_inFiles.push_back(argv[optind]);
+    // Process the path
+    if (path != nullptr) {
+        if (_inFiles.empty() && _exFiles.empty()) {
+            _inFiles.push_back(path);
         }
         else {
-            m_path = argv[optind];
+            _path = path;
             // Remove trailing slashes
-            while (m_path.size() > 1 && m_path.at(m_path.size() - 1) == '/') {
-                m_path.resize(m_path.size() - 1);
+            while (_path.size() > 1 && _path.at(_path.size() - 1) == '/') {
+                _path.resize(_path.size() - 1);
             }
         }
     }
 
-    if (m_allContent && m_inContent.empty()) {
+    if (_allContent && _inContent.empty()) {
         fprintf(stderr, "--all option is only allowed if the content filter is not empty.\n");
         return;
     }
-    if (m_extraContent > 0 && !m_allContent) {
+    if (_extraContent > 0 && !_allContent) {
         fprintf(stderr, "--extra option is only allowed with the --all option.\n");
         return;
     }
-    if (!m_exec.empty() && m_allContent) {
+    if (!_exec.empty() && _allContent) {
         fprintf(stderr, "--exec option cannot be used with the --all option.\n");
         return;
     }
 
-    m_valid = true;
+    _valid = true;
 }
 
 void Args::addFilters(Config const & config,
