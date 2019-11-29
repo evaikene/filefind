@@ -58,6 +58,10 @@ The configuration file can be used to defined globally included or exluded direc
 ```
 Additional sections in the configuration file are used to define lists that can be used with `--[i]name`, `--[i]dir` and `--[i]content` command line parameters.
 
+# Platforms
+
+The filefind tool has been sucessfully built on Linux, Mac OS, and IBM PASE for i. Note that on IBM PASE for i the fnmatch(3) function does not support case insensitive matching and therefore all the file and directory filters are always case sensitive.
+
 # Examples
 
 Search for "\*.cpp" and "\*.h" files in the directory "~/src/" containing the string
@@ -71,8 +75,9 @@ or "unittest"
 ```
 
 # Building
-Building filefind requires cmake and boost. Create a build directory and run:
+Building filefind requires cmake. Create a build directory and run:
 ```
 > cmake <path-to-filefind>
 > make
+> make install
 ```
