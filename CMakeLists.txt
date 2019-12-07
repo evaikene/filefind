@@ -10,6 +10,7 @@ set (HDRS
     error.H
     filter.H
     regex.H
+	search.H
 )
 set (SRCS
     args.C
@@ -20,9 +21,23 @@ set (SRCS
     regex.C
 )
 
+if (WIN32)
+	add_definitions (-D_WIN32)
+	list (APPEND SRCS search_win32.C)
+elseif (UNIX)
+	add_definitions (-D_UNIX)
+	list (APPEND SRCS search_unix.C)
+endif ()
+
+set (LIBS "")
+if (WIN32)
+	list (APPEND LIBS "Shlwapi")
+endif ()
+
 add_executable (${PROJECT_NAME} ${HDRS} ${SRCS})
 if (AIX)
     target_compile_options (${PROJECT_NAME} PRIVATE -maix64 -pthread)
     set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,-brtl -Wl,-bsvr4 -Wl,-R/QOpenSys/pkgs/lib/gcc/powerpc-ibm-aix6.1.0.0/6.3.0/pthread/ppc64 -Wl,-R/QOpenSys/pkgs/lib/gcc/powerpc-ibm-aix6.1.0.0/6.3.0 -Wl,-R/QOpenSys/pkgs/lib/gcc -Wl,-R/QOpenSys/pkgs/lib")
 endif ()
+target_link_libraries (${PROJECT_NAME} ${LIBS})
 install (TARGETS ${PROJECT_NAME} DESTINATION bin)

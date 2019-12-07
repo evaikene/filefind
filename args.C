@@ -4,7 +4,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(_UNIX)
 #include <unistd.h>
+#endif
 
 namespace
 {
@@ -38,6 +40,10 @@ namespace
         "NB! File and directory name filters are always case sensitive on IBM PASE for i\n"
         "due to the fnmatch(3) limitations.\n"
     #endif
+#if defined(_WIN32)
+		"\n"
+		"NB! File and directory name filters are always case insensitive on Windows.\n"
+#endif
         "\n"
         "\n"
         "File and directory name filters use the fnmatch(3) shell wildcard patterns.\n"
@@ -108,7 +114,12 @@ namespace
 
 void Args::printUsage(bool err, char const * appName)
 {
+#if defined(_UNIX)
     fprintf(err ? stderr : stdout, usage, appName);
+#endif
+#if defined (_WIN32)
+    _printf_p(usage, appName);
+#endif
 }
 
 Args::Args(int argc, char ** argv)

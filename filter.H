@@ -1,5 +1,5 @@
-#ifndef __FILTER_H
-#define __FILTER_H
+#ifndef FILTER_H
+#define FILTER_H
 
 #include <string>
 #include <list>
@@ -25,7 +25,7 @@ public:
     bool hasContentFilters() const;
     bool hasExcludeContentFilters() const;
     bool printContent() const;
-    bool matchContent(std::string const & line, regmatch_t * pmatch = nullptr) const;
+    bool matchContent(std::string const & line, std::smatch * pmatch = nullptr) const;
     bool excludeContent(std::string const & line) const;
 
 private:
@@ -33,6 +33,8 @@ private:
     Args const & m_args;
     Regex::PtrList m_inContent;
     Regex::PtrList m_exContent;
+
+	static bool fnmatch(std::string const& pattern, std::string const& string, bool icase);
 };
 
 #endif

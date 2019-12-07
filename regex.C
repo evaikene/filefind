@@ -6,34 +6,35 @@
 #include <string.h>
 
 Regex::Regex(String const & r)
-    : m_valid(false)
+    : _valid(false)
 {
-    int const rval = regcomp(&m_preg, r.c_str(), REG_EXTENDED + (r.noCase() ? REG_ICASE : 0));
-    m_valid = (rval == 0);
-    if (!m_valid) {
-        char buf[256];
-        regerror(rval, &m_preg, buf, sizeof(buf));
-        throw Error(std::string(buf));
-    }
+	try {
+		std::regex::flag_type flags = std::regex::extended;
+		if (r.noCase()) {
+			flags |= std::regex::icase;
+		}
+		_preg = std::regex(r, flags);
+		_valid = true;
+	}
+	catch (std::regex_error const& ex) {
+		throw Error(ex.what());
+	}
 }
 
 Regex::~Regex()
 {
-    if (m_valid) {
-        regfree(&m_preg);
-    }
 }
 
-bool Regex::match(std::string const & s, regmatch_t * pmatch) const
+bool Regex::match(std::string const & s, std::smatch * pmatch) const
 {
     bool rval = false;
-    if (m_valid) {
-        size_t nmatch = 0;
-        if (pmatch != nullptr) {
-            nmatch = 1;
-            memset(pmatch, 0, sizeof(regmatch_t));
-        }
-        rval = (regexec(&m_preg, s.c_str(), nmatch, pmatch, 0) == 0);
+    if (_valid) {
+		if (pmatch != nullptr) {
+			rval = std::regex_match(s, *pmatch, _preg);
+		}
+		else {
+			rval = std::regex_match(s, _preg);
+		}
     }
     return rval;
 }

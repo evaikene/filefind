@@ -1,5 +1,5 @@
-#ifndef __ERROR_H
-#define __ERROR_H
+#ifndef ERROR_H
+#define ERROR_H
 
 #include <stdexcept>
 #include <string>
@@ -56,11 +56,10 @@ protected:
     std::string m_msg;
 };
 
-#define ERROR(fmt, ...) \
+#define THROW_ERROR(fmt, ...) \
 { \
     char * buf = NULL; \
-    if (asprintf(&buf, fmt, __VA_ARGS__) == -1) \
-    { \
+    if (asprintf(&buf, fmt, __VA_ARGS__) == -1) { \
         throw std::runtime_error("asprintf returned -1"); \
     } \
     std::string const msg(buf); \

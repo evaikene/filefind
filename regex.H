@@ -1,11 +1,11 @@
-#ifndef __REGEX_H
-#define __REGEX_H
+#ifndef REGEX_H
+#define REGEX_H
 
 #include <string>
 #include <list>
 #include <memory>
 
-#include <regex.h>
+#include <regex>
 
 class String;
 
@@ -19,13 +19,13 @@ public:
     Regex(String const & r);
     ~Regex();
 
-    bool valid() const { return m_valid; }
-    bool match(std::string const & s, regmatch_t * pmatch = nullptr) const;
+    inline bool valid() const { return _valid; }
+    bool match(std::string const & s, std::smatch * pmatch = nullptr) const;
 
 private:
 
-    bool m_valid;
-    regex_t m_preg;
+    bool _valid;
+    std::regex _preg;
 };
 
 #endif // REGEX_H

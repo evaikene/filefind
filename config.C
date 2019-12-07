@@ -5,7 +5,9 @@
 Config::Config(std::string const & fileName, std::string const & fullPath)
     : _valid(false)
 {
+#if defined(_UNIX)
     _valid = loadConfig(fileName, fullPath);
+#endif
 }
 
 StringList Config::values(std::string const & section) const
@@ -21,20 +23,20 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
 {
     FILE * f = nullptr;
     if (!fullPath.empty()) {
-        f = fopen(fullPath.c_str(), "r");
+		f = fopen(fullPath.c_str(), "r");
         if (f == nullptr) {
             return false;
         }
-    }
-    else {
-        f = fopen(getLocalConfig(fileName).c_str(), "r");
-        if (f == nullptr) {
-            f = fopen(getSystemConfig(fileName).c_str(), "r");
-            if (f == nullptr) {
-                return false;
+	}
+	else {
+		f = fopen(getLocalConfig(fileName).c_str(), "r");
+		if (f == nullptr) {
+			f = fopen(getSystemConfig(fileName).c_str(), "r");
+			if (f == nullptr) {
+				return false;
             }
         }
-    }
+	}
 
     // Add the default section without a name
     _sections[std::string()] = StringList();

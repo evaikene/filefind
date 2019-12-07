@@ -2,7 +2,12 @@
 #include "args.H"
 #include "error.H"
 
+#if defined(_WIN32)
+#include <shlwapi.h>
+#endif
+#if defined(_UNIX)
 #include <fnmatch.h>
+#endif
 
 #if defined(_AIX)
 // No FNM_CASEFOLD on AIX
@@ -36,11 +41,7 @@ bool Filter::matchDir(std::string const & name) const
     // Include filters
     std::list<String>::const_iterator it = m_args.includeDirs().begin();
     for (; !match && it != m_args.includeDirs().end(); ++it) {
-        int const rval = fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH) {
-            ERROR("Invalid pattern \"%s\" : %m", it->c_str());
-        }
-        match = (rval == 0);
+		match = fnmatch(*it, name, it->noCase());
     }
 
     return match;
@@ -53,12 +54,8 @@ bool Filter::excludeDir(std::string const & name) const
     // Exclude filters
     std::list<String>::const_iterator it = m_args.excludeDirs().begin();
     for (; !match && it != m_args.excludeDirs().end(); ++it) {
-        int const rval = fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH) {
-            ERROR("Invalid pattern \"%s\" : %m", it->c_str());
-        }
-        match = (rval == 0);
-    }
+		match = fnmatch(*it, name, it->noCase());
+	}
 
     return match;
 }
@@ -70,21 +67,13 @@ bool Filter::matchFile(std::string const & name) const
     // Include filters
     std::list<String>::const_iterator it = m_args.includeFiles().begin();
     for (; !match && it != m_args.includeFiles().end(); ++it) {
-        int const rval = fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH) {
-            ERROR("Invalid pattern \"%s\" : %m", it->c_str());
-        }
-        match = (rval == 0);
+		match = fnmatch(*it, name, it->noCase());
     }
 
     // Exclude filters
     it = m_args.excludeFiles().begin();
     for (; match && it != m_args.excludeFiles().end(); ++it) {
-        int const rval =fnmatch(it->c_str(), name.c_str(), it->noCase() ? FNM_CASEFOLD : 0);
-        if (rval != 0 && rval != FNM_NOMATCH) {
-            ERROR("Invalid pattern \"%s\" : %m", it->c_str());
-        }
-        match = (rval == FNM_NOMATCH);
+		match = !fnmatch(*it, name, it->noCase());
     }
 
     return match;
@@ -105,7 +94,7 @@ bool Filter::printContent() const
     return !m_inContent.empty() && m_args.allContent();
 }
 
-bool Filter::matchContent(std::string const & line, regmatch_t * pmatch) const
+bool Filter::matchContent(std::string const & line, std::smatch * pmatch) const
 {
     bool match = m_inContent.empty();
 
@@ -127,4 +116,19 @@ bool Filter::excludeContent(std::string const & line) const
         exclude = (*it)->match(line);
     }
     return exclude;
+}
+
+bool Filter::fnmatch(std::string const & pattern, std::string const & string, bool icase)
+{
+#if defined(_UNIX)
+	// POSIX fnmatch
+	int const rval = ::fnmatch(pattern.c_str(), string.c_str(), icase ? FNM_CASEFOLD : 0);
+	if (rval != 0 && rval != FNM_NOMATCH) {
+		THROW_ERROR("Invalid pattern \"%s\" : %m", pattern.c_str());
+	}
+	return (rval == 0);
+#endif
+#if defined(_WIN32)
+	return PathMatchSpecA(string.c_str(), pattern.c_str());
+#endif
 }

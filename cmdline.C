@@ -1,6 +1,7 @@
 #include "cmdline.H"
 
 #include <string.h>
+#include <stdio.h>
 
 CmdLine::CmdLine(CmdLineOption const * opts)
     : _idx(0)
