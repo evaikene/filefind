@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #if defined(_UNIX)
 #include <unistd.h>
 #endif
@@ -29,6 +30,13 @@ namespace
         "                        {} will be replaced with the name of the file\n"
         "  -f, --name <pattern>  file name filter (case sensitive)\n"
         "  -F, --iname <pattern> file name filter (case insensitive)\n"
+        "  -g, --grammar <name>  Regular expressions grammar (default is extended POSIX grammar)\n"
+        "                        Other options are:\n"
+        "                           ECMAScript - EXMAScript grammar\n"
+        "                           basic - Basic POSIX grammar\n"
+        "                           awk - Awk POSIX grammar\n"
+        "                           grep - Grep POSIX grammar\n"
+        "                           egrep - Egrep POSIX grammar\n"
         "  -h, --help            prints this help message and exits\n"
         "  -n, --not             prefix for the next file name, directory name,\n"
         "                        or file content filter making it an exclude filter\n"
@@ -46,8 +54,11 @@ namespace
 #endif
         "\n"
         "\n"
-        "File and directory name filters use the fnmatch(3) shell wildcard patterns.\n"
-        "File content filters use regex(7) regular expressions.\n"
+        "File and directory name filters use the fnmatch(3) shell wildcard patterns on\n"
+        "unix-like operating systems and PathMatchSpecA() on Windows. File content\n"
+        "filters use regular expressions. By default, the extended POSIX grammar is used,\n"
+        "which can be changed with the --grammar command line argument or [grammar]\n"
+        "section in the configuration file.\n"
         "\n"
         "Exclude filters exclude directories, file names or content from the subset\n"
         "of files that matches include filters.\n"
@@ -98,18 +109,29 @@ namespace
         { "icontent",   CmdLineOption::RequiredArgument,  'C' },
         { "dir",        CmdLineOption::RequiredArgument,  'd' },
         { "idir",       CmdLineOption::RequiredArgument,  'D' },
-        { "name",       CmdLineOption::RequiredArgument,  'f' },
-        { "iname",      CmdLineOption::RequiredArgument,  'F' },
-        { "help",       CmdLineOption::NoArgument,        'h' },
-        { "not",        CmdLineOption::NoArgument,        'n' },
         { "extra",      CmdLineOption::RequiredArgument,  'e' },
         { "exec",       CmdLineOption::RequiredArgument,  'E' },
+        { "name",       CmdLineOption::RequiredArgument,  'f' },
+        { "iname",      CmdLineOption::RequiredArgument,  'F' },
+        { "grammar",    CmdLineOption::RequiredArgument,  'g' },
+        { "help",       CmdLineOption::NoArgument,        'h' },
+        { "not",        CmdLineOption::NoArgument,        'n' },
         { "nocolor",    CmdLineOption::NoArgument,        'o' },
         { nullptr,      CmdLineOption::Null,              0 }
     };
 
     char const * const CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
     char const * const CONFIG_FILE_NAME = "filefind";
+    
+    bool verifyGrammar(char const * v)
+    {
+        return (strcmp(v, "ECMAScript") == 0 ||
+                strcmp(v, "basic") == 0 ||
+                strcmp(v, "extended") == 0 ||
+                strcmp(v, "awk") == 0 ||
+                strcmp(v, "grep") == 0 ||
+                strcmp(v, "egrep") == 0);
+    }
 }
 
 void Args::printUsage(bool err, char const * appName)
@@ -135,6 +157,18 @@ Args::Args(int argc, char ** argv)
     Config config(CONFIG_FILE_NAME, configFileName != nullptr ? configFileName : std::string());
     if (config.valid()) {
 
+        // Grammar
+        {
+            StringList const values = config.values("grammar");
+            if (!values.empty()) {
+                if (verifyGrammar(values.front().c_str())) {
+                    _grammar = values.front();
+                }
+                else {
+                    fprintf(stderr, "Invalid grammar \"%s\", the default is extended.\n", values.front().c_str());
+                }
+            }
+        }
         // Predefined directory filters
         {
             StringList const values = config.values("dirs");
@@ -174,6 +208,14 @@ Args::Args(int argc, char ** argv)
             case 'h': {
                 printUsage(false, appName);
                 return;
+            }
+            case 'g': {
+                if (!verifyGrammar(arg.opt())) {
+                    fprintf(stderr, "Invalid grammar \"%s\"\n", arg.opt());
+                    return;
+                }
+                _grammar = arg.opt();
+                break;
             }
             case 'a': {
                 _allContent = true;

@@ -5,11 +5,36 @@
 #include <stddef.h>
 #include <string.h>
 
-Regex::Regex(String const & r)
+std::regex::flag_type Regex::grammarFromString(std::string const & grammar)
+{
+    if (grammar.empty() || grammar == "extended") {
+        return std::regex::extended;
+    }
+    else if (grammar == "ECMAScript") {
+        return std::regex::ECMAScript;
+    }
+    else if (grammar == "basic") {
+        return std::regex::basic;
+    }
+    else if (grammar == "awk") {
+        return std::regex::awk;
+    }
+    else if (grammar == "grep") {
+        return std::regex::grep;
+    }
+    else if (grammar == "egrep") {
+        return std::regex::egrep;
+    }
+    else {
+        // Fall-back is extended
+        return std::regex::extended;
+    }
+}
+
+Regex::Regex(String const & r, std::regex::flag_type flags)
     : _valid(false)
 {
 	try {
-		std::regex::flag_type flags = std::regex::extended;
 		if (r.noCase()) {
 			flags |= std::regex::icase;
 		}
@@ -30,10 +55,10 @@ bool Regex::match(std::string const & s, std::smatch * pmatch) const
     bool rval = false;
     if (_valid) {
 		if (pmatch != nullptr) {
-			rval = std::regex_match(s, *pmatch, _preg);
+			rval = std::regex_search(s, *pmatch, _preg);
 		}
 		else {
-			rval = std::regex_match(s, _preg);
+			rval = std::regex_search(s, _preg);
 		}
     }
     return rval;

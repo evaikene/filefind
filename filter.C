@@ -20,11 +20,11 @@ Filter::Filter(Args const & args)
     // Build content filters
     std::list<String>::const_iterator it = m_args.includeContent().begin();
     for (; it != m_args.includeContent().end(); ++it) {
-        m_inContent.push_back(Regex::Ptr(new Regex(*it)));
+        m_inContent.push_back(Regex::Ptr(new Regex(*it, Regex::grammarFromString(args.grammar()))));
     }
     it = m_args.excludeContent().begin();
     for (; it != m_args.excludeContent().end(); ++it) {
-        m_exContent.push_back(Regex::Ptr(new Regex(*it)));
+        m_exContent.push_back(Regex::Ptr(new Regex(*it, Regex::grammarFromString(args.grammar()))));
     }
 }
 
@@ -124,7 +124,7 @@ bool Filter::fnmatch(std::string const & pattern, std::string const & string, bo
 	// POSIX fnmatch
 	int const rval = ::fnmatch(pattern.c_str(), string.c_str(), icase ? FNM_CASEFOLD : 0);
 	if (rval != 0 && rval != FNM_NOMATCH) {
-		THROW_ERROR("Invalid pattern \"%s\" : %m", pattern.c_str());
+		THROW_ERROR("Invalid pattern \"%s\" : %s", pattern.c_str(), strerror(errno));
 	}
 	return (rval == 0);
 #endif

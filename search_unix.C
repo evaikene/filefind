@@ -56,7 +56,7 @@ namespace
 		bool rval = false;
 		std::unique_ptr<FILE, decltype(&_fclose)> f(fopen(path.c_str(), "r"), &_fclose);
 		if (!f) {
-			fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %m\n", path.c_str());
+			fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %s\n", path.c_str(), strerror(errno));
 			return rval;
 		}
 
@@ -76,7 +76,7 @@ namespace
 	{
 		std::unique_ptr<FILE, decltype(&_fclose)> f(fopen(path.c_str(), "r"), &_fclose);
 		if (!f) {
-			fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %m\n", path.c_str());
+			fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %s\n", path.c_str(), strerror(errno));
 			return;
 		}
 
@@ -106,11 +106,11 @@ namespace
 						char s1[1024];
 						char s2[1024];
 						char s3[1024];
-						strncpy(s1, buf, size_t(pmatch.rm_so));
-						s1[pmatch.rm_so] = '\0';
-						strncpy(s2, &buf[pmatch.rm_so], size_t(pmatch.rm_eo - pmatch.rm_so));
-						s2[pmatch.rm_eo - pmatch.rm_so] = '\0';
-						strcpy(s3, &buf[pmatch.rm_eo]);
+						strncpy(s1, buf, pmatch.position());
+						s1[pmatch.position()] = '\0';
+						strncpy(s2, &buf[pmatch.position()], pmatch.length());
+						s2[pmatch.length()] = '\0';
+						strcpy(s3, &buf[pmatch.position() + pmatch.length()]);
 
 						printf("%s +%d : \"%s%s%s%s%s\"\n",
 							path.c_str(),
@@ -195,7 +195,7 @@ namespace
 		}
 		std::unique_ptr<DIR, decltype(&_closedir)> dir(opendir(fullPath.c_str()), &_closedir);
 		if (!dir) {
-			fprintf(stderr, "\033[31mERROR:\033[0m Failed to open directory %s : %m\n", fullPath.c_str());
+			fprintf(stderr, "\033[31mERROR:\033[0m Failed to open directory %s : %s\n", fullPath.c_str(), strerror(errno));
 			return;
 		}
 

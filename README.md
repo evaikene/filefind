@@ -19,6 +19,13 @@ args:
                         {} will be replaced with the name of the file
   -f, --name <pattern>  file name filter (case sensitive)
   -F, --iname <pattern> file name filter (case insensitive)
+  -g, --grammar <name>  Regular expressions grammar (default is extended POSIX grammar)
+                        Other options are:
+                           ECMAScript - EXMAScript grammar
+                           basic - Basic POSIX grammar
+                           awk - Awk POSIX grammar
+                           grep - Grep POSIX grammar
+                           egrep - Egrep POSIX grammar
   -h, --help            prints this help message and exits
   -n, --not             prefix for the next file name, directory name,
                         or file content filter making it an exclude filter
@@ -27,7 +34,7 @@ args:
                         for some other commands
 ```
 
-File and directory name filters use the fnmatch(3) shell wildcard patterns. File content filters use regex(7) regular expressions.
+File and directory name filters use the fnmatch(3) shell wildcard patterns on unix-like operating systems and PathMatchSpecA() on Windows. File content   filters use regular expressions. By default, the extended POSIX grammar is used, which can be changed with the --grammar command line argument or `[grammar]` section in the configuration file.
 
 Exclude filters exclude directories, file names or content from the subset of files that matches include filters.
 
@@ -56,11 +63,16 @@ The configuration file can be used to defined globally included or exluded direc
 !.git
 !.svn
 ```
+The `[grammar]` section can be used to defined the default regular expressions grammar. For example, the following `[grammar]` section defines basic POSIX grammar as the default regular expression grammar:
+```
+[grammar]
+basic
+```
 Additional sections in the configuration file are used to define lists that can be used with `--[i]name`, `--[i]dir` and `--[i]content` command line parameters.
 
 # Platforms
 
-The filefind tool has been sucessfully built on Linux, Mac OS, and IBM PASE for i. Note that on IBM PASE for i the fnmatch(3) function does not support case insensitive matching and therefore all the file and directory filters are always case sensitive.
+The filefind tool has been sucessfully built on Linux, Mac OS, Widnows, and IBM PASE for i. Note that on IBM PASE for i the fnmatch(3) function does not support case insensitive matching and therefore all the file and directory filters are always case sensitive. Note that on Windows the PathMatchSpecA() function does not support case sensitive matching and therefore all the file and directory filters are always case insensitive.
 
 # Examples
 

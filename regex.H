@@ -13,10 +13,12 @@ class Regex
 {
 public:
     
+    static std::regex::flag_type grammarFromString(std::string const & grammar);
+    
     typedef std::unique_ptr<Regex> Ptr;
     typedef std::list<Ptr> PtrList;
 
-    Regex(String const & r);
+    explicit Regex(String const & r, std::regex::flag_type flags);
     ~Regex();
 
     inline bool valid() const { return _valid; }

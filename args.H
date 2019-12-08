@@ -95,6 +95,10 @@ public:
         return _valid;
     }
 
+    inline std::string const & grammar() const
+    {
+        return _grammar;
+    }
     inline std::string const & path() const
     {
         return _path;
@@ -157,6 +161,7 @@ private:
 
     bool _valid;
 
+    std::string _grammar;
     std::string _path;
     std::list<String> _inFiles;
     std::list<String> _exFiles;
