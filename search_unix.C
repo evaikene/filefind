@@ -72,6 +72,33 @@ namespace
 		return rval;
 	}
 
+    size_t const BUF_SIZE = 1024;
+
+    size_t printMatch(char const * buf, std::smatch const & pmatch, bool nocolor)
+    {
+        size_t const sz = strlen(buf);
+        char s1[BUF_SIZE] = "";
+        char s2[BUF_SIZE] = "";
+        size_t msz = std::min<size_t>(pmatch.position(), BUF_SIZE - 1);
+        strncpy(s1, buf, msz);
+        s1[msz] = '\0';
+        size_t idx = msz;
+        if (idx < sz) {
+            msz = std::min<size_t>(pmatch.length(), BUF_SIZE - 1);
+            strncpy(s2, &buf[idx], msz);
+            s2[msz] = '\0';
+            idx += msz;
+        }
+
+        printf("%s%s%s%s",
+            s1,
+            nocolor ? "" : "\033[31m",
+            s2,
+            nocolor ? "" : "\033[0m");
+
+        return idx;
+    }
+
 	void findInFile(std::string const& path, Filter const& filter)
 	{
 		std::unique_ptr<FILE, decltype(&_fclose)> f(fopen(path.c_str(), "r"), &_fclose);
@@ -80,12 +107,12 @@ namespace
 			return;
 		}
 
-		char buf[1024];
+		char buf[BUF_SIZE];
 		int lineno = 0;
 		bool binary = false;
 		int linesToPrint = 0;
 		bool const nocolor = filter.args().noColor();
-		while (fgets(buf, sizeof(buf), f.get()) != nullptr) {
+		while (fgets(buf, BUF_SIZE, f.get()) != nullptr) {
 			// Remove trailing CR and LF characters
 			size_t sz = strlen(buf);
 			while (sz > 0 && (buf[sz - 1] == '\n' || buf[sz - 1] == '\r')) {
@@ -102,24 +129,27 @@ namespace
 			if (filter.matchContent(buf, &pmatch)) {
 				if (filter.printContent()) {
 					if (!binary) {
-						// Print content
-						char s1[1024];
-						char s2[1024];
-						char s3[1024];
-						strncpy(s1, buf, pmatch.position());
-						s1[pmatch.position()] = '\0';
-						strncpy(s2, &buf[pmatch.position()], pmatch.length());
-						s2[pmatch.length()] = '\0';
-						strcpy(s3, &buf[pmatch.position() + pmatch.length()]);
 
-						printf("%s +%d : \"%s%s%s%s%s\"\n",
-							path.c_str(),
-							lineno,
-							s1,
-							nocolor ? "" : "\033[31m",
-							s2,
-							nocolor ? "" : "\033[0m",
-							s3);
+                        printf("%s +%d : \"", path.c_str(), lineno);
+
+						// Print content
+                        size_t idx = printMatch(buf, pmatch, nocolor);
+
+                        // Repeat search for more matches
+                        while (idx < sz && filter.matchContent(&buf[idx], &pmatch)) {
+                            idx += printMatch(&buf[idx], pmatch, nocolor);
+                        }
+
+                        // The remainder of the line
+                        if (idx < sz) {
+                            char s3[BUF_SIZE];
+                            strncpy(s3, &buf[idx], BUF_SIZE - 1);
+                            s3[BUF_SIZE - 1] = '\0';
+                            printf("%s\"\n", s3);
+                        }
+                        else {
+                            printf("\"\n");
+                        }
 
 						linesToPrint = filter.args().extraContent();
 					}
