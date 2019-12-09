@@ -32,6 +32,8 @@ endif ()
 set (LIBS "")
 if (WIN32)
 	list (APPEND LIBS "Shlwapi")
+elseif (AIX)
+    list (APPEND LIBS pthread)
 endif ()
 
 add_executable (${PROJECT_NAME} ${HDRS} ${SRCS})
