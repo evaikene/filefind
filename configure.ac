@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE([-Wall foreign])
 AC_PROG_CXX
 AC_LANG(C++)
 AX_CHECK_COMPILE_FLAG([-std=c++11], [
-	CXXFLAGS+=" -std=c++11"
+	CXXFLAGS="$CXXFLAGS -std=c++11"
 ], [
 	echo "C++ compiler cannot compile C++11 code"
 	exit -1
