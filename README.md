@@ -54,7 +54,8 @@ File name filters can be built using predefined lists in a configuration file. T
 ```
 # Configuration files
 
-The application tries to use the user's configuration file "~/.config/filefind". If this is not found, tries to open the global configuration file "/etc/filefind".
+The application tries to use the user's configuration file "~/.config/filefind". If this is not found, tries to open the global configuration file "/etc/filefind". To use a specific configuration file, specify the full path of the file in the
+FILEFIND\_CONFIG environment variable.
 
 The configuration file is a simple ini-like file with sections and values, where every value is on a separate line. Empty lines and lines startng with `'#'` or `';'` are ignored.
 
@@ -79,12 +80,24 @@ The filefind tool has been sucessfully built on Linux, Mac OS, Widnows, and IBM 
 
 Search for "\*.cpp" and "\*.h" files in the directory "~/src/" containing the string
 "MConfig" excluding directories with the names that contain the strings "unit-tests"
-or "unittest"
+or "unittest":
 
 ```
 > filefind ~/src/ --name "*.cpp" --name "*.h" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ --name "@cpp" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ -f "*.cpp" -f "*.h" -c "MConfig" -d '!unit-tests' -d '!unittest'
+```
+
+Use a custom configuration file to search for all the "\*.pacnew" files in the "/etc" directory:
+
+```
+> cat > ~/.config/filefind_pacman << EOF
+[dirs]
+!.git
+[files]
+*.pacnew
+EOF
+> FILEFIND_CONFIG=~/.config/filefind_pacman filefind /etc
 ```
 
 # Building
