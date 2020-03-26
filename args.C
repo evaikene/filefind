@@ -1,6 +1,9 @@
 #include "args.H"
 #include "cmdline.H"
 #include "config.H"
+#if defined(_AUTOTOOLS)
+#  include "conf.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +46,7 @@ namespace
         "  -o, --nocolor         do not highlight search results with colors\n"
         "                        useful when the search results is used as an input\n"
         "                        for some other commands\n"
+        "  -v, --version         print version number, then exit\n"
     #if defined(_AIX)
         "\n"
         "NB! File and directory name filters are always case sensitive on IBM PASE for i\n"
@@ -117,12 +121,13 @@ namespace
         { "help",       CmdLineOption::NoArgument,        'h' },
         { "not",        CmdLineOption::NoArgument,        'n' },
         { "nocolor",    CmdLineOption::NoArgument,        'o' },
+        { "version",    CmdLineOption::NoArgument,        'v' },
         { nullptr,      CmdLineOption::Null,              0 }
     };
 
     char const * const CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
     char const * const CONFIG_FILE_NAME = "filefind";
-    
+
     bool verifyGrammar(char const * v)
     {
         return (strcmp(v, "ECMAScript") == 0 ||
@@ -142,6 +147,11 @@ void Args::printUsage(bool err, char const * appName)
 #if defined (_WIN32)
     _printf_p(usage, appName);
 #endif
+}
+
+void Args::printVersion()
+{
+    printf("%s\n", PACKAGE_STRING);
 }
 
 Args::Args(int argc, char ** argv)
@@ -207,6 +217,10 @@ Args::Args(int argc, char ** argv)
         switch (arg.what()) {
             case 'h': {
                 printUsage(false, appName);
+                return;
+            }
+            case 'v': {
+                printVersion();
                 return;
             }
             case 'g': {

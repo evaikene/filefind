@@ -1,4 +1,6 @@
-project (filefind CXX)
+cmake_policy (SET CMP0048 NEW)
+
+project (filefind VERSION 1.0.0 LANGUAGES CXX)
 cmake_minimum_required (VERSION 3.7)
 set (CMAKE_CXX_STANDARD_REQUIRED 11)
 set (CMAKE_CXX_STANDARD 11)
@@ -28,6 +30,7 @@ elseif (UNIX)
 	add_definitions (-D_UNIX)
 	list (APPEND SRCS search_unix.C)
 endif ()
+add_definitions (-DPACKAGE_STRING="${PROJECT_NAME} ${filefind_VERSION}")
 
 set (LIBS "")
 if (WIN32)

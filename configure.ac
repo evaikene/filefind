@@ -1,4 +1,4 @@
-AC_INIT([filefind], [1.0])
+AC_INIT([filefind], [1.0.0])
 
 AC_CONFIG_SRCDIR([search_unix.C])
 
@@ -17,6 +17,8 @@ AX_CHECK_COMPILE_FLAG([-std=c++11], [
 ])
 
 AC_CONFIG_FILES([Makefile])
+
+AC_CONFIG_HEADERS(conf.h)
 
 AC_OUTPUT
 

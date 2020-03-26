@@ -32,6 +32,7 @@ args:
   -o, --nocolor         do not highlight search results with colors
                         useful when the search results is used as an input
                         for some other commands
+  -v, --version         print version number, then exit
 ```
 
 File and directory name filters use the fnmatch(3) shell wildcard patterns on unix-like operating systems and PathMatchSpecA() on Windows. File content   filters use regular expressions. By default, the extended POSIX grammar is used, which can be changed with the --grammar command line argument or `[grammar]` section in the configuration file.
@@ -90,6 +91,15 @@ or "unittest"
 Building filefind requires cmake. Create a build directory and run:
 ```
 > cmake <path-to-filefind>
+> make
+> make install
+```
+
+# Building with GNU autotools
+Requires GNU autotools to be installed. Run the following commands in the source directory:
+```
+> autoreconf --install
+> ./configure
 > make
 > make install
 ```

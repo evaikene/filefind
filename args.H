@@ -152,6 +152,8 @@ private:
 
     static void printUsage(bool err, char const * appName);
 
+    static void printVersion();
+
     static void addFilters(Config const & config,
                            String const & list,
                            bool no,
