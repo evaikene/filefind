@@ -15,7 +15,7 @@ args:
   -d, --dir <pattern>   directory name filter (case sensitive)
   -D, --idir <pattern>  directory name filter (case insensitive)
   -e, --extra <n>       print additional <n> lines after a match with -a
-  -E, --exec "<cmd> {}" execute <cmd> for every matching file
+  -X, --exec "<cmd> {}" execute <cmd> for every matching file
                         {} will be replaced with the name of the file
   -f, --name <pattern>  file name filter (case sensitive)
   -F, --iname <pattern> file name filter (case insensitive)
@@ -86,6 +86,12 @@ or "unittest":
 > filefind ~/src/ --name "*.cpp" --name "*.h" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ --name "@cpp" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ -f "*.cpp" -f "*.h" -c "MConfig" -d '!unit-tests' -d '!unittest'
+```
+
+Delete all the "Makefile.in" files in the current directory:
+
+```
+> filefind -f "Makefile.in" -X "rm {}"
 ```
 
 Use a custom configuration file to search for all the "\*.pacnew" files in the "/etc" directory:

@@ -29,7 +29,7 @@ namespace
         "  -d, --dir <pattern>   directory name filter (case sensitive)\n"
         "  -D, --idir <pattern>  directory name filter (case insensitive)\n"
         "  -e, --extra <n>       print additional <n> lines after a match with -a\n"
-        "  -E, --exec \"<cmd> {}\" execute <cmd> for every matching file\n"
+        "  -X, --exec \"<cmd> {}\" execute <cmd> for every matching file\n"
         "                        {} will be replaced with the name of the file\n"
         "  -f, --name <pattern>  file name filter (case sensitive)\n"
         "  -F, --iname <pattern> file name filter (case insensitive)\n"
@@ -114,7 +114,7 @@ namespace
         { "dir",        CmdLineOption::RequiredArgument,  'd' },
         { "idir",       CmdLineOption::RequiredArgument,  'D' },
         { "extra",      CmdLineOption::RequiredArgument,  'e' },
-        { "exec",       CmdLineOption::RequiredArgument,  'E' },
+        { "exec",       CmdLineOption::RequiredArgument,  'X' },
         { "name",       CmdLineOption::RequiredArgument,  'f' },
         { "iname",      CmdLineOption::RequiredArgument,  'F' },
         { "grammar",    CmdLineOption::RequiredArgument,  'g' },
@@ -245,7 +245,7 @@ Args::Args(int argc, char ** argv)
                 }
                 break;
             }
-            case 'E': {
+            case 'X': {
                 _exec = arg.opt();
                 break;
             }
