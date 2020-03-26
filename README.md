@@ -26,7 +26,7 @@ args:
                            awk - Awk POSIX grammar
                            grep - Grep POSIX grammar
                            egrep - Egrep POSIX grammar
-  -h, --help            prints this help message and exits
+  -h, --help            print this help, then exit
   -n, --not             prefix for the next file name, directory name,
                         or file content filter making it an exclude filter
   -o, --nocolor         do not highlight search results with colors
