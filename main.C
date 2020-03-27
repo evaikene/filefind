@@ -8,8 +8,8 @@ int main(int argc, char ** argv)
 {
     // Parse command line arguments
     Args args(argc, argv);
-    if (!args.valid()) {
-        return EXIT_FAILURE;
+    if (args.exit()) {
+        return args.valid() ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     try {

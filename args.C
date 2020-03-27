@@ -59,10 +59,11 @@ namespace
         "\n"
         "\n"
         "File and directory name filters use the fnmatch(3) shell wildcard patterns on\n"
-        "unix-like operating systems and PathMatchSpecA() on Windows. File content\n"
-        "filters use regular expressions. By default, the extended POSIX grammar is used,\n"
-        "which can be changed with the --grammar command line argument or [grammar]\n"
-        "section in the configuration file.\n"
+        "unix-like operating systems and PathMatchSpecA() on Windows.\n"
+        "\n"
+        "File content filters use regular expressions. By default, the extended POSIX\n"
+        "grammar is used, which can be changed with the --grammar command line argument\n"
+        "or [grammar] section in the configuration file.\n"
         "\n"
         "Exclude filters exclude directories, file names or content from the subset\n"
         "of files that matches include filters.\n"
@@ -155,7 +156,8 @@ void Args::printVersion()
 }
 
 Args::Args(int argc, char ** argv)
-    : _valid(false)
+    : _valid(true)
+    , _exit(true)
     , _path(".")
     , _allContent(false)
     , _ascii(false)
@@ -226,6 +228,7 @@ Args::Args(int argc, char ** argv)
             case 'g': {
                 if (!verifyGrammar(arg.opt())) {
                     fprintf(stderr, "Invalid grammar \"%s\"\n", arg.opt());
+                _valid = false;
                     return;
                 }
                 _grammar = arg.opt();
@@ -241,6 +244,7 @@ Args::Args(int argc, char ** argv)
                 if (e == nullptr || *e != '\0')
                 {
                     fprintf(stderr, "Invalid value \"%s\"\n", arg.opt());
+                _valid = false;
                     return;
                 }
                 break;
@@ -327,13 +331,15 @@ Args::Args(int argc, char ** argv)
                 break;
             }
             case CmdLineArg::REQUIRES_ARGUMENT: {
-                fprintf(stderr, "%s requires an argument\n\n", arg.name());
+                fprintf(stderr, "\"%s\" requires an argument\n\n", arg.name());
                 printUsage(true, appName);
+                _valid = false;
                 return;
             }
             default: {
-                fprintf(stderr, "Invalid option %s\n\n", arg.name());
+                fprintf(stderr, "Invalid option \"%s\"\n\n", arg.name());
                 printUsage(true, appName);
+                _valid = false;
                 return;
             }
         }
@@ -355,18 +361,21 @@ Args::Args(int argc, char ** argv)
 
     if (_allContent && _inContent.empty()) {
         fprintf(stderr, "--all option is only allowed if the content filter is not empty.\n");
+        _valid = false;
         return;
     }
     if (_extraContent > 0 && !_allContent) {
         fprintf(stderr, "--extra option is only allowed with the --all option.\n");
+        _valid = false;
         return;
     }
     if (!_exec.empty() && _allContent) {
         fprintf(stderr, "--exec option cannot be used with the --all option.\n");
+        _valid = false;
         return;
     }
 
-    _valid = true;
+    _exit = false;
 }
 
 void Args::addFilters(Config const & config,

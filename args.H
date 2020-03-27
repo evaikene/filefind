@@ -90,6 +90,13 @@ public:
     inline ~Args()
     {}
 
+    /// Flag indicating that the application should exit without performing any searches
+    inline bool exit() const
+    {
+        return _exit;
+    }
+
+    /// Flag indicating that command line arguments are valid
     inline bool valid() const
     {
         return _valid;
@@ -161,6 +168,7 @@ private:
                            std::list<String> & in,
                            std::list<String> & ex);
 
+    bool _exit;
     bool _valid;
 
     std::string _grammar;
