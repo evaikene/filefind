@@ -1,6 +1,7 @@
 #include "args.H"
 #include "cmdline.H"
 #include "config.H"
+#include "utils.H"
 #if defined(_AUTOTOOLS)
 #  include "conf.h"
 #endif
@@ -161,12 +162,16 @@ Args::Args(int argc, char ** argv)
     , _path(".")
     , _allContent(false)
     , _ascii(false)
+#if defined(_WIN32)
+    , _noColor(true)
+#else
     , _noColor(false)
+#endif
     , _extraContent(0)
 {
     // Use the configuration file for initial values
-    char const * configFileName = getenv(CONFIG_FILE_NAME_ENV);
-    Config config(CONFIG_FILE_NAME, configFileName != nullptr ? configFileName : std::string());
+    std::string const configFileName = Utils::getenv(CONFIG_FILE_NAME_ENV);
+    Config config(CONFIG_FILE_NAME, configFileName);
     if (config.valid()) {
 
         // Grammar

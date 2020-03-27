@@ -1,11 +1,12 @@
 cmake_policy (SET CMP0048 NEW)
 
-project (filefind VERSION 1.0.2 LANGUAGES CXX)
+project (filefind VERSION 1.1.0 LANGUAGES CXX)
 cmake_minimum_required (VERSION 3.7)
 set (CMAKE_CXX_STANDARD_REQUIRED 11)
 set (CMAKE_CXX_STANDARD 11)
 
 set (HDRS
+    utils.H
     args.H
     cmdline.H
     config.H
@@ -15,19 +16,23 @@ set (HDRS
 	search.H
 )
 set (SRCS
+    utils.C
     args.C
     cmdline.C
     config.C
     filter.C
     main.C
     regex.C
+    search.C
 )
 
 if (WIN32)
 	add_definitions (-D_WIN32)
+    list (APPEND HDRS search_win32.H)
 	list (APPEND SRCS search_win32.C)
 elseif (UNIX)
 	add_definitions (-D_UNIX)
+    list (APPEND HDRS search_unix.H)
 	list (APPEND SRCS search_unix.C)
 endif ()
 add_definitions (-DPACKAGE_STRING="${PROJECT_NAME} ${filefind_VERSION}")

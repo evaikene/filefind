@@ -13,5 +13,9 @@ filefind_SOURCES = \
     regex.H \
     regex.C \
     search.H \
-    search_unix.C
+    search.C \
+    search_unix.H \
+    search_unix.C \
+    utils.H \
+    utils.C
 filefind_CPPFLAGS = -D_UNIX -D_AUTOTOOLS

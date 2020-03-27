@@ -1,4 +1,5 @@
 #include "config.H"
+#include "utils.H"
 
 #include <stdio.h>
 
@@ -23,15 +24,15 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
 {
     FILE * f = nullptr;
     if (!fullPath.empty()) {
-		f = fopen(fullPath.c_str(), "r");
+		f = Utils::fopen(fullPath.c_str(), "r");
         if (f == nullptr) {
             return false;
         }
 	}
 	else {
-		f = fopen(getLocalConfig(fileName).c_str(), "r");
+		f = Utils::fopen(getLocalConfig(fileName).c_str(), "r");
 		if (f == nullptr) {
-			f = fopen(getSystemConfig(fileName).c_str(), "r");
+			f = Utils::fopen(getSystemConfig(fileName).c_str(), "r");
 			if (f == nullptr) {
 				return false;
             }
@@ -80,7 +81,7 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
 std::string Config::getLocalConfig(std::string const & fileName)
 {
     // Determine the home directory
-    char const * homeDir = getenv("HOME");
+    std::string const homeDir = Utils::getenv("HOME");
     return std::string(homeDir) + "/.config/" + fileName;
 }
 
