@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
     }
 
     try {
-        search(args);
+        Search::instance(args).search();
     }
     catch (Error const & e) {
         fprintf(stderr, "\033[31mERROR:\033[0m %s\n", e.what());
