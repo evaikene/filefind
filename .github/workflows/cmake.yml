@@ -29,13 +29,13 @@ jobs:
     - name: make
       run: make
 
-  build-win:
-
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      run: cmake -G "NMake Makefiles" .
-    - name: make
-      run: nmake
+#  build-win:
+#
+#    runs-on: windows-latest
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#    - name: configure
+#      run: cmake -G "NMake Makefiles" .
+#    - name: make
+#      run: nmake
