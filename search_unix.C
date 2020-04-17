@@ -162,6 +162,38 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                     nocolor ? "" : "\033[0m");
             }
         }
+        else if (DT_FIFO == d_type && _filter.matchFile(d_name)) {
+            if (!dirMatch) {
+                continue;
+            }
+            if (hasCmd) {
+                std::string const filePath(fullPath + d_name);
+                execCmd(cmd, filePath);
+            }
+            else {
+                printf("%s%s%s%s : named pipe (FIFO) name matches\n",
+                    fullPath.c_str(),
+                    nocolor ? "" : "\033[31m",
+                    d_name,
+                    nocolor ? "" : "\033[0m");
+            }
+        }
+        else if (DT_SOCK == d_type && _filter.matchFile(d_name)) {
+            if (!dirMatch) {
+                continue;
+            }
+            if (hasCmd) {
+                std::string const filePath(fullPath + d_name);
+                execCmd(cmd, filePath);
+            }
+            else {
+                printf("%s%s%s%s : UNIX domain socket name matches\n",
+                    fullPath.c_str(),
+                    nocolor ? "" : "\033[31m",
+                    d_name,
+                    nocolor ? "" : "\033[0m");
+            }
+        }
     }
 }
 
