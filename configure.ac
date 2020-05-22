@@ -1,4 +1,4 @@
-AC_INIT([filefind], [1.2.0])
+AC_INIT([filefind], [1.2.1])
 
 AC_CONFIG_SRCDIR([search_unix.C])
 

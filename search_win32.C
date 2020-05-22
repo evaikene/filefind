@@ -27,7 +27,7 @@ void SearchWin32::printError(std::string const & what) const
         nullptr,
         dw,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        lpMsgBuf,
+        (LPSTR)&lpMsgBuf,
         0, nullptr);
     LPTSTR lpDisplayBuf = (LPSTR)LocalAlloc(LMEM_ZEROINIT,
         (lstrlen(lpMsgBuf) + what.size() + 40) * sizeof(TCHAR));
@@ -66,7 +66,7 @@ void SearchWin32::findFiles(std::string const& root, std::string const& path, bo
     WIN32_FIND_DATA fileData;
     std::string const pattern(fullPath + "*");
     if ((hFind = FindFirstFile(pattern.c_str(), &fileData)) == INVALID_HANDLE_VALUE) {
-        printError("FindFirstFile");
+        printError("Accessing " + pattern);
         return;
     }
     do {
