@@ -77,9 +77,7 @@ void Search::findInFile(std::string const & path) const
         }
 
         // Check for a binary file
-        for (size_t i = 0; !_args.ascii() && !binary && i < sz; ++i) {
-            binary = (isprint(buf[i]) == 0 && buf[i] != '\t');
-        }
+        binary = !binary && !_args.ascii() && memchr(buf, 0, sz) != nullptr;
 
         ++lineno;
         std::smatch pmatch;
