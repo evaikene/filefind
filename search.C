@@ -9,6 +9,9 @@
 #include "search_unix.H"
 #endif
 
+#include <string.h>
+
+
 namespace {
     size_t const BUF_SIZE = 1024;
 }
