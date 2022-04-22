@@ -80,7 +80,7 @@ void Search::findInFile(std::string const & path) const
         binary = !binary && !_args.ascii() && memchr(buf, 0, sz) != nullptr;
 
         ++lineno;
-        std::smatch pmatch;
+        Match pmatch;
         if (_filter.matchContent(buf, &pmatch)) {
             if (_filter.printContent()) {
                 if (!binary) {
@@ -154,7 +154,7 @@ bool Search::excludeFileByContent(std::string const & path) const
     return rval;
 }
 
-size_t Search::printMatch(char const * buf, std::smatch const & pmatch, bool nocolor) const
+size_t Search::printMatch(char const * buf, Match const & pmatch, bool nocolor) const
 {
     size_t const sz = strlen(buf);
     char s1[BUF_SIZE] = "";
@@ -170,7 +170,7 @@ size_t Search::printMatch(char const * buf, std::smatch const & pmatch, bool noc
 
     printf("%s%s%s%s",
         s1,
-        nocolor ? "" : "\033[31m",
+        nocolor ? "" : "\033[31m\033[1m",
         s2,
         nocolor ? "" : "\033[0m");
 

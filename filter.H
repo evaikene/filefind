@@ -25,7 +25,7 @@ public:
     bool hasContentFilters() const;
     bool hasExcludeContentFilters() const;
     bool printContent() const;
-    bool matchContent(std::string const & line, std::smatch * pmatch = nullptr) const;
+    bool matchContent(std::string const & line, Match * pmatch = nullptr) const;
     bool excludeContent(std::string const & line) const;
 
 private:
@@ -38,4 +38,3 @@ private:
 };
 
 #endif
-

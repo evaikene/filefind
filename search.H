@@ -10,8 +10,7 @@
 class Args;
 
 /// Generic file search class
-class Search
-{
+class Search {
 public:
 
     /// Returns a platform-specific instance
@@ -55,7 +54,7 @@ protected:
 
     void findInFile(std::string const & path) const;
 
-    virtual size_t printMatch(char const * buf, std::smatch const & pmatch, bool nocolor) const;
+    virtual size_t printMatch(char const * buf, Match const & pmatch, bool nocolor) const;
 
     virtual void findFiles(std::string const & root, std::string const & path, bool dirMatch) const = 0;
 
@@ -65,8 +64,6 @@ private:
 
     /// Global instance
     static Search * _instance;
-
-
 
 };
 

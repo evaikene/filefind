@@ -20,11 +20,11 @@ Filter::Filter(Args const & args)
     // Build content filters
     std::list<String>::const_iterator it = m_args.includeContent().begin();
     for (; it != m_args.includeContent().end(); ++it) {
-        m_inContent.push_back(Regex::Ptr(new Regex(*it, Regex::grammarFromString(args.grammar()))));
+        m_inContent.push_back(Regex::Ptr(new Regex(*it, args.grammar())));
     }
     it = m_args.excludeContent().begin();
     for (; it != m_args.excludeContent().end(); ++it) {
-        m_exContent.push_back(Regex::Ptr(new Regex(*it, Regex::grammarFromString(args.grammar()))));
+        m_exContent.push_back(Regex::Ptr(new Regex(*it, args.grammar())));
     }
 }
 
@@ -94,7 +94,7 @@ bool Filter::printContent() const
     return !m_inContent.empty() && m_args.allContent();
 }
 
-bool Filter::matchContent(std::string const & line, std::smatch * pmatch) const
+bool Filter::matchContent(std::string const & line, Match * pmatch) const
 {
     bool match = m_inContent.empty();
 

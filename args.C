@@ -34,6 +34,7 @@ namespace
         "                        {} will be replaced with the name of the file\n"
         "  -f, --name <pattern>  file name filter (case sensitive)\n"
         "  -F, --iname <pattern> file name filter (case insensitive)\n"
+    #if !defined(RE2_FOUND)
         "  -g, --grammar <name>  Regular expressions grammar (default is extended POSIX grammar)\n"
         "                        Other options are:\n"
         "                           ECMAScript - EXMAScript grammar\n"
@@ -41,6 +42,7 @@ namespace
         "                           awk - Awk POSIX grammar\n"
         "                           grep - Grep POSIX grammar\n"
         "                           egrep - Egrep POSIX grammar\n"
+    #endif
         "  -h, --help            prints this help message and exits\n"
         "  -n, --not             prefix for the next file name, directory name,\n"
         "                        or file content filter making it an exclude filter\n"
@@ -62,9 +64,13 @@ namespace
         "File and directory name filters use the fnmatch(3) shell wildcard patterns on\n"
         "unix-like operating systems and PathMatchSpecA() on Windows.\n"
         "\n"
+    #if !defined(RE2_FOUND)
         "File content filters use regular expressions. By default, the extended POSIX\n"
         "grammar is used, which can be changed with the --grammar command line argument\n"
         "or [grammar] section in the configuration file.\n"
+    #else
+        "File content filters use Perl-style regular expressions.\n"
+    #endif
         "\n"
         "Exclude filters exclude directories, file names or content from the subset\n"
         "of files that matches include filters.\n"
@@ -119,7 +125,9 @@ namespace
         { "exec",       CmdLineOption::RequiredArgument,  'X' },
         { "name",       CmdLineOption::RequiredArgument,  'f' },
         { "iname",      CmdLineOption::RequiredArgument,  'F' },
+    #if !defined(RE2_FOUND)
         { "grammar",    CmdLineOption::RequiredArgument,  'g' },
+    #endif
         { "help",       CmdLineOption::NoArgument,        'h' },
         { "not",        CmdLineOption::NoArgument,        'n' },
         { "nocolor",    CmdLineOption::NoArgument,        'o' },
@@ -174,6 +182,7 @@ Args::Args(int argc, char ** argv)
     Config config(CONFIG_FILE_NAME, configFileName);
     if (config.valid()) {
 
+#if !defined(RE2_FOUND)
         // Grammar
         {
             StringList const values = config.values("grammar");
@@ -186,6 +195,7 @@ Args::Args(int argc, char ** argv)
                 }
             }
         }
+#endif
         // Predefined directory filters
         {
             StringList const values = config.values("dirs");
