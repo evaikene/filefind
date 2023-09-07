@@ -1,4 +1,4 @@
-AC_INIT([filefind], [1.2.2])
+AC_INIT([filefind], [1.3.1])
 
 AC_CONFIG_SRCDIR([search_unix.C])
 
@@ -21,4 +21,3 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADERS(conf.h)
 
 AC_OUTPUT
-

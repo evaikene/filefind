@@ -11,7 +11,8 @@ filefind_SOURCES = \
     filter.H \
     filter.C \
     regex.H \
-    regex.C \
+    std_regex.H \
+    std_regex.C \
     search.H \
     search.C \
     search_unix.H \
