@@ -1,7 +1,7 @@
-cmake_policy (SET CMP0048 NEW)
+cmake_minimum_required (VERSION 3.7...3.27)
 
-project (filefind VERSION 1.3.0 LANGUAGES CXX)
-cmake_minimum_required (VERSION 3.7)
+project (filefind VERSION 1.3.1 LANGUAGES CXX)
+
 set (CMAKE_CXX_STANDARD_REQUIRED 11)
 set (CMAKE_CXX_STANDARD 11)
 
