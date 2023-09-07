@@ -1,7 +1,9 @@
 # filefind
+
 A simple command line tool that combines basic functionality of find and grep.
 
 # Usage
+
 `filefind [args] [path]`
 
 where `path` is an optional path to start searching. Uses the current working directory if no `path` is given. Without any filter arguments, uses `path` as the name filter and searches for it in the current directory.
@@ -52,6 +54,7 @@ File name filters can be built using predefined lists in a configuration file. T
 *.C
 *.H
 ```
+
 # Configuration files
 
 The application tries to use the user's configuration file "~/.config/filefind". If this is not found, tries to open the global configuration file "/etc/filefind". To use a specific configuration file, specify the full path of the file in the
@@ -60,16 +63,20 @@ FILEFIND\_CONFIG environment variable.
 The configuration file is a simple ini-like file with sections and values, where every value is on a separate line. Empty lines and lines startng with `'#'` or `';'` are ignored.
 
 The configuration file can be used to defined globally included or exluded directory names in the `[dirs]` section and globally included or excluded file names in the `[files]` section. For example, the following `[dirs]` section would always ignore directories `.git` and `.svn`:
+
 ```
 [dirs]
 !.git
 !.svn
 ```
+
 The `[grammar]` section can be used to defined the default regular expressions grammar. For example, the following `[grammar]` section defines basic POSIX grammar as the default regular expression grammar:
+
 ```
 [grammar]
 basic
 ```
+
 Additional sections in the configuration file are used to define lists that can be used with `--[i]name`, `--[i]dir` and `--[i]content` command line parameters.
 
 # Platforms
@@ -82,7 +89,7 @@ Search for "\*.cpp" and "\*.h" files in the directory "~/src/" containing the st
 "MConfig" excluding directories with the names that contain the strings "unit-tests"
 or "unittest":
 
-```
+```sh
 > filefind ~/src/ --name "*.cpp" --name "*.h" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ --name "@cpp" --content "MConfig" --not --dir "unit-tests" --not --dir "unittest"
 > filefind ~/src/ -f "*.cpp" -f "*.h" -c "MConfig" -d '!unit-tests' -d '!unittest'
@@ -90,13 +97,13 @@ or "unittest":
 
 Delete all the "Makefile.in" files in the current directory:
 
-```
+```sh
 > filefind -f "Makefile.in" -X "rm {}"
 ```
 
 Use a custom configuration file to search for all the "\*.pacnew" files in the "/etc" directory:
 
-```
+```sh
 > cat > ~/.config/filefind_pacman << EOF
 [dirs]
 !.git
@@ -107,16 +114,28 @@ EOF
 ```
 
 # Building
+
 Building filefind requires cmake. Create a build directory and run:
-```
+
+```sh
 > cmake <path-to-filefind>
 > make
 > make install
 ```
 
-# Building with GNU autotools
-Requires GNU autotools to be installed. Run the following commands in the source directory:
+# Building with cmake presets and vcpkq (requires ninja)
+
+```sh
+> cmake --preset=ninja-multi
+> cmake --build --preset=ninja-release
+> sudo cmake --install builds/ninja-multi
 ```
+
+# Building with GNU autotools
+
+Requires GNU autotools to be installed. Run the following commands in the source directory:
+
+```sh
 > autoreconf --install
 > ./configure
 > make

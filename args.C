@@ -161,7 +161,12 @@ void Args::printUsage(bool err, char const * appName)
 
 void Args::printVersion()
 {
-    printf("%s\n", PACKAGE_STRING);
+#if defined(RE2_FOUND)
+    constexpr char const * const rx_version = "re2";
+#else
+    constexpr char const * const rx_version = "std::regex";
+#endif
+    printf("%s (%s)\n", PACKAGE_STRING, rx_version);
 }
 
 Args::Args(int argc, char ** argv)
