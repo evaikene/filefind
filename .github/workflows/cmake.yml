@@ -1,41 +1,60 @@
 name: CMake CI
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
-  build-linux:
+  job:
+    name: ${{ matrix.os }}-${{ github.workflow }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            triplet: x64-linux
+          - os: macos-latest
+            triplet: x64-osx
 
-    runs-on: ubuntu-latest
+    env:
+      _VCPKG_: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
+      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
 
     steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      run: cmake .
-    - name: make
-      run: make
 
-  build-mac:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    runs-on: macos-latest
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      run: cmake .
-    - name: make
-      run: make
+      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
+        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+        shell: bash
 
-#  build-win:
-#
-#    runs-on: windows-latest
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#    - name: configure
-#      run: cmake -G "NMake Makefiles" .
-#    - name: make
-#      run: nmake
+      - uses: lukka/get-cmake@latest
+
+      - name: Restore vcpkg
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env._VCPKG_ }}
+            !${{ env._VCPKG_ }}/buildtrees
+            !${{ env._VCPKG_ }}/packages
+            !${{ env._VCPKG_ }}/downloads
+            !${{ env._VCPKG_ }}/installed
+          key: |
+            ${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}
+
+      - name: configure
+        run: cmake --preset ninja-multi
+
+      - name: make
+        run: cmake --build --preset ninja-release
