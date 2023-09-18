@@ -21,9 +21,11 @@
 // struct dirent on AIX does not have the d_type field nor defines for its values
 #include <sys/vnode.h>
 #define DT_UNKNOWN 0
+#define DT_FIFO 1
 #define DT_DIR 2
 #define DT_REG 3
 #define DT_LNK 10
+#define DT_SOCK 12
 #endif
 
 namespace {
@@ -219,6 +221,9 @@ unsigned char SearchUnix::getType(std::string const & pathname, unsigned char co
                 break;
             case VLNK:
                 rval = DT_LNK;
+                break;
+            case VFIFO:
+                rval = DT_FIFO;
                 break;
             default:;
             }
