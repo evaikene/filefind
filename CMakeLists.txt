@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.7...3.27)
 
-project (filefind VERSION 1.3.1 LANGUAGES CXX)
+project (filefind VERSION 1.3.2 LANGUAGES CXX)
 
 set (CMAKE_CXX_STANDARD_REQUIRED 11)
 set (CMAKE_CXX_STANDARD 11)
@@ -19,6 +19,10 @@ set (HDRS
     filter.H
     regex.H
 	search.H
+    fmt/color.h
+    fmt/core.h
+    fmt/format.h
+    fmt/format-inl.h
 )
 set (SRCS
     utils.C
@@ -28,6 +32,7 @@ set (SRCS
     filter.C
     main.C
     search.C
+    fmt/format.cc
 )
 
 if (re2_FOUND)
@@ -52,6 +57,8 @@ if (WIN32)
 elseif (AIX)
     list (APPEND LIBS pthread)
 endif ()
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable (${PROJECT_NAME} ${HDRS} ${SRCS})
 if (AIX)

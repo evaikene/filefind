@@ -2,6 +2,9 @@
 #include "error.H"
 #include "search.H"
 
+#include "fmt/format.h"
+#include "fmt/color.h"
+
 #include <stdio.h>
 
 int main(int argc, char ** argv)
@@ -16,7 +19,9 @@ int main(int argc, char ** argv)
         Search::instance(args).search();
     }
     catch (Error const & e) {
-        fprintf(stderr, "\033[31mERROR:\033[0m %s\n", e.what());
+        fmt::println(stderr, "{} {}",
+                    fmt::styled("ERROR:", fmt::fg(fmt::color::red)),
+                    e.what());
         return EXIT_FAILURE;
     }
 

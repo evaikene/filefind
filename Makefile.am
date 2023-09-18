@@ -18,5 +18,10 @@ filefind_SOURCES = \
     search_unix.H \
     search_unix.C \
     utils.H \
-    utils.C
+    utils.C \
+    fmt/color.h \
+    fmt/core.h \
+    fmt/format-inl.h \
+    fmt/format.cc \
+    fmt/format.h
 filefind_CPPFLAGS = -D_UNIX -D_AUTOTOOLS

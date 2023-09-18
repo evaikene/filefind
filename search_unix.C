@@ -3,6 +3,9 @@
 #include "filter.H"
 #include "utils.H"
 
+#include "fmt/color.h"
+#include "fmt/format.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -68,7 +71,10 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
     }
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(fullPath.c_str()), &closedir);
     if (!dir) {
-        fprintf(stderr, "\033[31mERROR:\033[0m Failed to open directory %s : %s\n", fullPath.c_str(), strerror(errno));
+        fmt::println(stderr, "{} Failed to open file {} : {}",
+                    fmt::styled("ERROR:", fmt::fg(fmt::color::red)),
+                    fullPath,
+                    Utils::strerror(errno));
         return;
     }
 
@@ -117,7 +123,7 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                 execCmd(cmd, filePath);
             }
             else {
-                printf("%s\n", filePath.c_str());
+                fmt::println("{}", filePath);
             }
         }
         else if (DT_DIR == d_type && strcmp(d_name, ".") != 0
@@ -128,11 +134,9 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
             }
             if (_filter.matchFile(d_name) && !_filter.hasContentFilters() && _args.execCmd().empty()) {
                 // Directory name itself matches the name filter
-                printf("%s%s%s%s/ : directory name matches\n",
-                    fullPath.c_str(),
-                    nocolor ? "" : "\033[31m",
-                    d_name,
-                    nocolor ? "" : "\033[0m");
+                fmt::println("{}{}/ : directory name matches",
+                    fullPath,
+                    fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
             newPath.append(d_name);
             if (_filter.excludeDir(d_name) || _filter.excludeDir(newPath)) {
@@ -155,11 +159,9 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                 execCmd(cmd, filePath);
             }
             else {
-                printf("%s%s%s%s\n",
-                    fullPath.c_str(),
-                    nocolor ? "" : "\033[31m",
-                    d_name,
-                    nocolor ? "" : "\033[0m");
+                fmt::println("{}{}",
+                    fullPath,
+                    fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
         }
         else if (DT_FIFO == d_type && _filter.matchFile(d_name)) {
@@ -174,11 +176,9 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                 execCmd(cmd, filePath);
             }
             else {
-                printf("%s%s%s%s|\n",
-                    fullPath.c_str(),
-                    nocolor ? "" : "\033[31m",
-                    d_name,
-                    nocolor ? "" : "\033[0m");
+                fmt::println("{}{}|",
+                    fullPath,
+                    fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
         }
         else if (DT_SOCK == d_type && _filter.matchFile(d_name)) {
@@ -193,11 +193,9 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                 execCmd(cmd, filePath);
             }
             else {
-                printf("%s%s%s%s=\n",
-                    fullPath.c_str(),
-                    nocolor ? "" : "\033[31m",
-                    d_name,
-                    nocolor ? "" : "\033[0m");
+                fmt::println("{}{}=",
+                    fullPath,
+                    fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
         }
     }

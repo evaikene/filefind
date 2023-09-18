@@ -126,7 +126,7 @@ bool Filter::fnmatch(std::string const & pattern, std::string const & string, bo
 	// POSIX fnmatch
 	int const rval = ::fnmatch(pattern.c_str(), string.c_str(), icase ? FNM_CASEFOLD : 0);
 	if (rval != 0 && rval != FNM_NOMATCH) {
-		THROW_ERROR("Invalid pattern \"%s\" : %s", pattern.c_str(), strerror(errno));
+		THROW_ERROR("Invalid pattern \"{}\" : {}", pattern, strerror(errno));
 	}
 	return (rval == 0);
 #endif
