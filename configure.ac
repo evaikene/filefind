@@ -1,11 +1,11 @@
-AC_INIT([filefind], [1.3.1])
+AC_INIT([filefind], [1.3.2])
 
 AC_CONFIG_SRCDIR([search_unix.C])
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIRS([m4])
 
-AM_INIT_AUTOMAKE([-Wall foreign])
+AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 
 AC_PROG_CXX
 AC_LANG(C++)

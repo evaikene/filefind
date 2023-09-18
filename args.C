@@ -6,6 +6,8 @@
 #  include "conf.h"
 #endif
 
+#include "fmt/format.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +18,7 @@
 namespace
 {
     char const * const usage =
-        "USAGE: %1$s [args] [path]\n"
+        "USAGE: {0} [args] [path]\n"
         "\n"
         "where \'path\' is an optional path to start searching. Uses the current working\n"
         "directory if no \'path\' is given. Without any filter arguments uses [path] as\n"
@@ -30,8 +32,8 @@ namespace
         "  -d, --dir <pattern>   directory name filter (case sensitive)\n"
         "  -D, --idir <pattern>  directory name filter (case insensitive)\n"
         "  -e, --extra <n>       print additional <n> lines after a match with -a\n"
-        "  -X, --exec \"<cmd> {}\" execute <cmd> for every matching file\n"
-        "                        {} will be replaced with the name of the file\n"
+        "  -X, --exec \"<cmd> {{}}\" execute <cmd> for every matching file\n"
+        "                        {{}} will be replaced with the name of the file\n"
         "  -f, --name <pattern>  file name filter (case sensitive)\n"
         "  -F, --iname <pattern> file name filter (case insensitive)\n"
     #if !defined(RE2_FOUND)
@@ -104,13 +106,13 @@ namespace
         "\"MISCconfig\" excluding directories with names that contain \"unit-tests\"\n"
         "or \"unittest\":\n"
         "\n"
-        "> %1$s ~/src/TMTC --name \"*.C\" --content \"MISCconfig\" --not --dir \"unit-tests\" --not --dir \"unittest\"\n"
-        "> %1$s ~/src/TMTC -f \"*.C\" -c \"MISCconfig\" -d \'!unit-tests\' -d \'!unittest\'\n"
+        "> {0} ~/src/TMTC --name \"*.C\" --content \"MISCconfig\" --not --dir \"unit-tests\" --not --dir \"unittest\"\n"
+        "> {0} ~/src/TMTC -f \"*.C\" -c \"MISCconfig\" -d \'!unit-tests\' -d \'!unittest\'\n"
         "\n"
         "Searching for all the C++ files containing the string \"MISCconfig\" using the predefined list\n"
         "of files \"@cpp\":\n"
         "\n"
-        "> %1$s ~/src/TMTC --name \"@cpp\" --content \"MISCconfig\"\n"
+        "> {0} ~/src/TMTC --name \"@cpp\" --content \"MISCconfig\"\n"
         "\n";
 
     CmdLineOption const opts[] =
@@ -151,12 +153,7 @@ namespace
 
 void Args::printUsage(bool err, char const * appName)
 {
-#if defined(_UNIX)
-    fprintf(err ? stderr : stdout, usage, appName);
-#endif
-#if defined (_WIN32)
-    _printf_p(usage, appName);
-#endif
+    fmt::print(err ? stderr : stdout, usage, appName);
 }
 
 void Args::printVersion()
@@ -166,7 +163,7 @@ void Args::printVersion()
 #else
     constexpr char const * const rx_version = "std::regex";
 #endif
-    printf("%s (%s)\n", PACKAGE_STRING, rx_version);
+    fmt::println("{} ({})", PACKAGE_STRING, rx_version);
 }
 
 Args::Args(int argc, char ** argv)
@@ -196,7 +193,7 @@ Args::Args(int argc, char ** argv)
                     _grammar = values.front();
                 }
                 else {
-                    fprintf(stderr, "Invalid grammar \"%s\", the default is extended.\n", values.front().c_str());
+                    fmt::println(stderr, "Invalid grammar \"{}\", the default is extended.", values.front());
                 }
             }
         }
@@ -247,7 +244,7 @@ Args::Args(int argc, char ** argv)
             }
             case 'g': {
                 if (!verifyGrammar(arg.opt())) {
-                    fprintf(stderr, "Invalid grammar \"%s\"\n", arg.opt());
+                    fmt::println(stderr, "Invalid grammar \"{}\"", arg.opt());
                 _valid = false;
                     return;
                 }
@@ -263,7 +260,7 @@ Args::Args(int argc, char ** argv)
                 _extraContent = int(strtol(arg.opt(), &e, 10));
                 if (e == nullptr || *e != '\0')
                 {
-                    fprintf(stderr, "Invalid value \"%s\"\n", arg.opt());
+                    fmt::println(stderr, "Invalid value \"{}\"", arg.opt());
                 _valid = false;
                     return;
                 }
@@ -351,13 +348,13 @@ Args::Args(int argc, char ** argv)
                 break;
             }
             case CmdLineArg::REQUIRES_ARGUMENT: {
-                fprintf(stderr, "\"%s\" requires an argument\n\n", arg.name());
+                fmt::println(stderr, "\"{}\" requires an argument\n", arg.name());
                 printUsage(true, appName);
                 _valid = false;
                 return;
             }
             default: {
-                fprintf(stderr, "Invalid option \"%s\"\n\n", arg.name());
+                fmt::println(stderr, "Invalid option \"{}\"\n", arg.name());
                 printUsage(true, appName);
                 _valid = false;
                 return;
@@ -380,17 +377,17 @@ Args::Args(int argc, char ** argv)
     }
 
     if (_allContent && _inContent.empty()) {
-        fprintf(stderr, "--all option is only allowed if the content filter is not empty.\n");
+        fmt::println(stderr, "--all option is only allowed if the content filter is not empty.");
         _valid = false;
         return;
     }
     if (_extraContent > 0 && !_allContent) {
-        fprintf(stderr, "--extra option is only allowed with the --all option.\n");
+        fmt::println(stderr, "--extra option is only allowed with the --all option.");
         _valid = false;
         return;
     }
     if (!_exec.empty() && _allContent) {
-        fprintf(stderr, "--exec option cannot be used with the --all option.\n");
+        fmt::println(stderr, "--exec option cannot be used with the --all option.");
         _valid = false;
         return;
     }
@@ -406,12 +403,12 @@ void Args::addFilters(Config const & config,
                       std::list<String> & ex)
 {
     if (!config.valid()) {
-        fprintf(stderr, "No configuration found with list definitions\n");
+        fmt::println(stderr, "No configuration found with list definitions");
         return;
     }
     StringList const values = config.values(list);
     if (values.empty()) {
-        fprintf(stderr, "List @%s is empty or not found\n", list.c_str());
+        fmt::println(stderr, "List @{} is empty or not found", list);
         return;
     }
     StringList::const_iterator it = values.begin();

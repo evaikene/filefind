@@ -3,6 +3,9 @@
 #include "regex.H"
 #include "utils.H"
 
+#include "fmt/color.h"
+#include "fmt/format.h"
+
 #if defined(_WIN32)
 #include "search_win32.H"
 #else
@@ -63,7 +66,10 @@ void Search::findInFile(std::string const & path) const
 {
     std::unique_ptr<FILE, decltype(&fclose)> f(Utils::fopen(path.c_str(), "r"), &fclose);
     if (!f) {
-        fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %s\n", path.c_str(), Utils::strerror(errno).c_str());
+        fmt::println(stderr, "{} Failed to open file {} : {}",
+                    fmt::styled("ERROR:", fmt::fg(fmt::color::red)),
+                    path,
+                    Utils::strerror(errno));
         return;
     }
 
@@ -88,7 +94,7 @@ void Search::findInFile(std::string const & path) const
             if (_filter.printContent()) {
                 if (!binary) {
 
-                    printf("%s +%d : \"", path.c_str(), lineno);
+                    fmt::print("{} +{} : \"", path, lineno);
 
                     // Print content
                     size_t idx = printMatch(buf, pmatch, nocolor);
@@ -102,17 +108,17 @@ void Search::findInFile(std::string const & path) const
                     if (idx < sz) {
                         char s3[BUF_SIZE];
                         Utils::strncpy_s(s3, BUF_SIZE, &buf[idx], BUF_SIZE - 1);
-                        printf("%s\"\n", s3);
+                        fmt::println("{}\"", s3);
                     }
                     else {
-                        printf("\"\n");
+                        fmt::println("\"");
                     }
 
                     linesToPrint = _args.extraContent();
                 }
                 else {
                     // Print only file name and exit
-                    printf("%s : binary file matches\n", path.c_str());
+                    fmt::println("{} : binary file matches", path);
                     break;
                 }
             }
@@ -123,14 +129,14 @@ void Search::findInFile(std::string const & path) const
             }
             else {
                 // Print only file name and exit
-                printf("%s\n", path.c_str());
+                fmt::println("{}", path);
                 break;
             }
         }
 
         // Print extra content
         if (linesToPrint > 0) {
-            printf("\t%s\n", buf);
+            fmt::println("\t{}", buf);
             --linesToPrint;
         }
     }
@@ -141,7 +147,10 @@ bool Search::excludeFileByContent(std::string const & path) const
     bool rval = false;
     std::unique_ptr<FILE, decltype(&fclose)> f(Utils::fopen(path.c_str(), "r"), &fclose);
     if (!f) {
-        fprintf(stderr, "\033[31mERROR:\033[0m Failed to open file %s : %s\n", path.c_str(), Utils::strerror(errno).c_str());
+        fmt::println(stderr, "{} Failed to open file {} : {}",
+                    fmt::styled("ERROR:", fmt::fg(fmt::color::red)),
+                    path,
+                    Utils::strerror(errno));
         return rval;
     }
 
@@ -171,11 +180,9 @@ size_t Search::printMatch(char const * buf, Match const & pmatch, bool nocolor) 
         idx += msz;
     }
 
-    printf("%s%s%s%s",
-        s1,
-        nocolor ? "" : "\033[31m\033[1m",
-        s2,
-        nocolor ? "" : "\033[0m");
+    fmt::print("{}{}",
+                s1,
+                fmt::styled(s2, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
 
     return idx;
 }
