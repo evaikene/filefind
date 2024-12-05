@@ -1,17 +1,19 @@
 cmake_minimum_required (VERSION 3.7...3.27)
 
-project (filefind VERSION 1.3.2 LANGUAGES CXX)
+project (filefind VERSION 2.0.0 LANGUAGES CXX)
 
-set (CMAKE_CXX_STANDARD_REQUIRED 11)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD_REQUIRED 17)
+set (CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# Find the optional re2 library
-find_package(re2 QUIET)
+# Find the re2 library
+find_package(re2 CONFIG REQUIRED)
+
+# Find the libfmt library
+find_package(fmt CONFIG REQUIRED)
 
 set (HDRS
-    utils.H
     args.H
     cmdline.H
     config.H
@@ -19,29 +21,18 @@ set (HDRS
     filter.H
     regex.H
 	search.H
-    fmt/color.h
-    fmt/core.h
-    fmt/format.h
-    fmt/format-inl.h
+    utils.H
 )
 set (SRCS
-    utils.C
     args.C
     cmdline.C
     config.C
     filter.C
     main.C
+    regex.C
     search.C
-    fmt/format.cc
+    utils.C
 )
-
-if (re2_FOUND)
-    list (APPEND HDRS re2_regex.H)
-    list (APPEND SRCS re2_regex.C)
-else ()
-    list (APPEND HDRS std_regex.H)
-    list (APPEND SRCS std_regex.C)
-endif()
 
 if (WIN32)
     list (APPEND HDRS search_win32.H)
@@ -68,14 +59,17 @@ endif ()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PACKAGE_STRING=\"${PROJECT_NAME} ${filefind_VERSION}\"")
 if (WIN32)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC "_WIN32")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "FF_WIN32")
 elseif (UNIX)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC "_UNIX")
-endif()
-if (re2_FOUND)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC "RE2_FOUND")
-    list (APPEND LIBS re2::re2)
-endif()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "FF_UNIX")
+    if (APPLE)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE "FF_APPLE")
+    elseif (AIX)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE "FF_AIX")
+    else ()
+        target_compile_definitions(${PROJECT_NAME} PRIVATE "FF_LINUX")
+    endif ()
+endif ()
 
-target_link_libraries (${PROJECT_NAME} PUBLIC ${LIBS})
+target_link_libraries (${PROJECT_NAME} PRIVATE re2::re2 fmt::fmt ${LIBS})
 install (TARGETS ${PROJECT_NAME} DESTINATION bin)

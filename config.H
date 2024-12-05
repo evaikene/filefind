@@ -31,7 +31,7 @@ class Config
 {
 public:
 
-    Config(std::string const & fileName, std::string const & fullPath = std::string());
+    Config(std::string const &fileName, std::optional<std::string> const &fullPath = std::nullopt);
     inline ~Config()
     {}
 
@@ -42,24 +42,23 @@ public:
     }
 
     /// Returns values from the specified section
-    StringList values(std::string const & section) const;
+    StringList values(std::string const &section) const;
 
 
 protected:
 
-    typedef std::map<std::string, StringList> SectionsMap;
+    using SectionsMap = std::map<std::string, StringList>;
 
     bool _valid;
     SectionsMap _sections;
 
-    bool loadConfig(std::string const & fileName, std::string const & fullPath);
+    bool loadConfig(std::string const & fileName, std::optional<std::string> const &fullPath);
 
-    static std::string getLocalConfig(std::string const & fileName);
-    static std::string getSystemConfig(std::string const & fileName);
+    static std::string getLocalConfig(std::string const &fileName);
+    static std::string getSystemConfig(std::string const &fileName);
 
-    static void trim(std::string & s);
-
-    static bool isSection(std::string & s);
+    static void trim(std::string &s);
+    static bool isSection(std::string &s);
 
 };
 

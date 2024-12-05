@@ -1,12 +1,14 @@
 #include "config.H"
 #include "utils.H"
 
+#include <fmt/format.h>
+
 #include <stdio.h>
 
-Config::Config(std::string const & fileName, std::string const & fullPath)
+Config::Config(std::string const &fileName, std::optional<std::string> const &fullPath)
     : _valid(false)
 {
-#if defined(_UNIX)
+#if defined(FF_UNIX)
     _valid = loadConfig(fileName, fullPath);
 #endif
 }
@@ -20,20 +22,19 @@ StringList Config::values(std::string const & section) const
     return it->second;
 }
 
-bool Config::loadConfig(std::string const & fileName, std::string const & fullPath)
+bool Config::loadConfig(std::string const &fileName, std::optional<std::string> const &fullPath)
 {
-    FILE * f = nullptr;
-    if (!fullPath.empty()) {
-		f = Utils::fopen(fullPath.c_str(), "r");
-        if (f == nullptr) {
+    auto f = Utils::invalid_file();
+    if (fullPath) {
+		f = Utils::fopen(*fullPath, "r");
+        if (!f) {
             return false;
         }
-	}
-	else {
-		f = Utils::fopen(getLocalConfig(fileName).c_str(), "r");
-		if (f == nullptr) {
-			f = Utils::fopen(getSystemConfig(fileName).c_str(), "r");
-			if (f == nullptr) {
+	} else {
+		f = Utils::fopen(getLocalConfig(fileName), "r");
+		if (!f) {
+			f = Utils::fopen(getSystemConfig(fileName), "r");
+			if (!f) {
 				return false;
             }
         }
@@ -44,7 +45,7 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
     StringList * section = &_sections[std::string()];
 
     char buf[1024];
-    while (fgets(buf, sizeof(buf), f) != nullptr) {
+    while (fgets(buf, sizeof(buf), f.get()) != nullptr) {
         std::string line(buf);
 
         // Trim leading and trailing whitespace
@@ -73,21 +74,20 @@ bool Config::loadConfig(std::string const & fileName, std::string const & fullPa
         // Must be a value belonging to the currently active section
         section->push_back(line);
     }
-    fclose(f);
 
     return true;
 }
 
-std::string Config::getLocalConfig(std::string const & fileName)
+std::string Config::getLocalConfig(std::string const &filename)
 {
     // Determine the home directory
-    std::string const homeDir = Utils::getenv("HOME");
-    return std::string(homeDir) + "/.config/" + fileName;
+    auto const home = Utils::getenv("HOME");
+    return fmt::format("{}/.config/{}", home ? *home : "", filename);
 }
 
-std::string Config::getSystemConfig(std::string const & fileName)
+std::string Config::getSystemConfig(std::string const & filename)
 {
-    return std::string("/etc/") + fileName;
+    return fmt::format("/etc/{}", filename);
 }
 
 void Config::trim(std::string & s)

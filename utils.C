@@ -5,10 +5,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-std::string Utils::strerror(int errnum)
+namespace _ {
+
+void close_file(FILE *file)
+{
+    if (file != nullptr) {
+        ::fclose(file);
+    }
+}
+
+} // namespace _
+
+namespace Utils {
+
+auto strerror(int errnum) -> std::string
 {
     std::string rval;
-#if defined(_WIN32)
+#if defined(FF_WIN32)
     char buf[1024];
     ::strerror_s(buf, sizeof(buf), errnum);
     rval = buf;
@@ -18,11 +31,11 @@ std::string Utils::strerror(int errnum)
     return rval;
 }
 
-std::string Utils::getenv(std::string const & name)
+auto getenv(std::string const & name) -> std::optional<std::string>
 {
     std::string rval;
     char * buf = nullptr;
-#if defined(_WIN32)
+#if defined(FF_WIN32)
     size_t len = 0;
     errno_t err = ::_dupenv_s(&buf, &len, name.c_str());
     if (err == 0 && buf != nullptr) {
@@ -39,24 +52,29 @@ std::string Utils::getenv(std::string const & name)
     return rval;
 }
 
-FILE * Utils::fopen(std::string const & path, std::string const & mode)
+auto invalid_file() -> FilePtr
 {
-    FILE * rval = nullptr;
-#if defined(_WIN32)
+    return FilePtr(nullptr, &_::close_file);
+}
+
+auto fopen(std::string const & path, std::string const & mode) -> FilePtr
+{
+    FilePtr rval(nullptr, &_::close_file);
+#if defined(FF_WIN32)
     errno_t err = ::fopen_s(&rval, path.c_str(), mode.c_str());
     if (err != 0) {
         rval = nullptr;
     }
 #else
-    rval = ::fopen(path.c_str(), mode.c_str());
+    rval.reset(::fopen(path.c_str(), mode.c_str()));
 #endif
     return rval;
 }
 
-char * Utils::strncpy_s(char * dst, size_t sz, char const * src, size_t len)
+auto strncpy_s(char * dst, size_t sz, char const * src, size_t len) -> char *
 {
     size_t rlen = std::min<size_t>(sz - 1, len);
-#if defined(_WIN32)
+#if defined(FF_WIN32)
     ::strncpy_s(dst, sz, src, rlen);
     return dst;
 #else
@@ -65,3 +83,5 @@ char * Utils::strncpy_s(char * dst, size_t sz, char const * src, size_t len)
     return rval;
 #endif
 }
+
+} // namespace Utils

@@ -3,8 +3,8 @@
 #include "filter.H"
 #include "utils.H"
 
-#include "fmt/color.h"
-#include "fmt/format.h"
+#include <fmt/color.h>
+#include <fmt/format.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,7 +17,7 @@
 #include <sys/syslimits.h>
 #endif
 
-#if defined(_AIX)
+#if defined(FF_AIX)
 // struct dirent on AIX does not have the d_type field nor defines for its values
 #include <sys/vnode.h>
 #define DT_UNKNOWN 0
@@ -87,14 +87,14 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
     struct dirent const* dent = nullptr;
     while ((dent = readdir(dir.get())) != nullptr) {
         char const* d_name = dent->d_name;
-#if defined(_AIX)
+#if defined(FF_AIX)
         unsigned char const d_type = getType(fullPath + d_name, DT_UNKNOWN);
 #else
         unsigned char const d_type = getType(fullPath + d_name, dent->d_type);
 #endif
 
         if (DT_LNK == d_type) {
-            if (!_filter.matchFile(d_name)) {
+            if (!_filter.match_file(d_name)) {
                 // Skip symbolic links that do not match the file name filter
                 continue;
             }
@@ -115,10 +115,10 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                 // Ignore stat errors and anything else than regular files
                 continue;
             }
-            if (_filter.hasExcludeContentFilters() && excludeFileByContent(filePath)) {
+            if (_filter.has_exclude_content_filters() && excludeFileByContent(filePath)) {
                 continue;
             }
-            if (_filter.hasContentFilters()) {
+            if (_filter.has_content_filters()) {
                 findInFile(filePath);
             }
             else if (hasCmd) {
@@ -134,27 +134,27 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
             if (!newPath.empty()) {
                 newPath.append(1, '/');
             }
-            if (_filter.matchFile(d_name) && !_filter.hasContentFilters() && _args.execCmd().empty()) {
+            if (_filter.match_file(d_name) && !_filter.has_content_filters() && _args.execCmd().empty()) {
                 // Directory name itself matches the name filter
                 fmt::println("{}{}/ : directory name matches",
                     fullPath,
                     fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
             newPath.append(d_name);
-            if (_filter.excludeDir(d_name) || _filter.excludeDir(newPath)) {
+            if (_filter.exclude_dir(d_name) || _filter.exclude_dir(newPath)) {
                 continue; // Ignore paths that match ignored directory filters
             }
-            findFiles(root, newPath, dirMatch | _filter.matchDir(d_name) | _filter.matchDir(newPath));
+            findFiles(root, newPath, dirMatch | _filter.match_dir(d_name) | _filter.match_dir(newPath));
         }
-        else if (DT_REG == d_type && _filter.matchFile(d_name)) {
+        else if (DT_REG == d_type && _filter.match_file(d_name)) {
             if (!dirMatch) {
                 continue;
             }
             std::string const filePath(fullPath + d_name);
-            if (_filter.hasExcludeContentFilters() && excludeFileByContent(filePath)) {
+            if (_filter.has_exclude_content_filters() && excludeFileByContent(filePath)) {
                 continue;
             }
-            if (_filter.hasContentFilters()) {
+            if (_filter.has_content_filters()) {
                 findInFile(filePath);
             }
             else if (hasCmd) {
@@ -166,11 +166,11 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                     fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
         }
-        else if (DT_FIFO == d_type && _filter.matchFile(d_name)) {
+        else if (DT_FIFO == d_type && _filter.match_file(d_name)) {
             if (!dirMatch) {
                 continue;
             }
-            if (_filter.hasExcludeContentFilters() || _filter.hasContentFilters()) {
+            if (_filter.has_exclude_content_filters() || _filter.has_content_filters()) {
                 continue;
             }
             if (hasCmd) {
@@ -183,11 +183,11 @@ void SearchUnix::findFiles(std::string const & root, std::string const & path, b
                     fmt::styled(d_name, nocolor ? fmt::fg(fmt::color{}) : fmt::fg(fmt::color::red)));
             }
         }
-        else if (DT_SOCK == d_type && _filter.matchFile(d_name)) {
+        else if (DT_SOCK == d_type && _filter.match_file(d_name)) {
             if (!dirMatch) {
                 continue;
             }
-            if (_filter.hasExcludeContentFilters() || _filter.hasContentFilters()) {
+            if (_filter.has_exclude_content_filters() || _filter.has_content_filters()) {
                 continue;
             }
             if (hasCmd) {
@@ -209,7 +209,7 @@ unsigned char SearchUnix::getType(std::string const & pathname, unsigned char co
 {
     unsigned char rval = d;
     if (d == DT_UNKNOWN) {
-#if defined(_AIX)
+#if defined(FF_AIX)
         struct stat sb;
         if (stat(pathname.c_str(), &sb) == 0) {
             switch (sb.st_type) {

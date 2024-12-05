@@ -1,136 +1,137 @@
-#include "filter.H"
 #include "args.H"
 #include "error.H"
+#include "filter.H"
 
 #include <string.h>
 
-#if defined(_WIN32)
-#include <shlwapi.h>
+#if defined(FF_WIN32)
+#  include <shlwapi.h>
 #endif
-#if defined(_UNIX)
-#include <fnmatch.h>
+#if defined(FF_UNIX)
+#  include <fnmatch.h>
 #endif
 
-#if defined(_AIX)
+#if defined(FF_AIX)
 // No FNM_CASEFOLD on AIX
-#define FNM_CASEFOLD 0
+#  define FNM_CASEFOLD 0
 #endif
 
-Filter::Filter(Args const & args)
-    : m_args(args)
+Filter::Filter(Args const &args)
+    : _args(args)
 {
     // Build content filters
-    std::list<String>::const_iterator it = m_args.includeContent().begin();
-    for (; it != m_args.includeContent().end(); ++it) {
-        m_inContent.push_back(Regex::Ptr(new Regex(*it, args.grammar())));
+    auto it = _args.includeContent().begin();
+    for (; it != _args.includeContent().end(); ++it) {
+        _in_content.push_back(Regex::Ptr(new Regex(*it)));
     }
-    it = m_args.excludeContent().begin();
-    for (; it != m_args.excludeContent().end(); ++it) {
-        m_exContent.push_back(Regex::Ptr(new Regex(*it, args.grammar())));
+    it = _args.excludeContent().begin();
+    for (; it != _args.excludeContent().end(); ++it) {
+        _ex_content.push_back(Regex::Ptr(new Regex(*it)));
     }
 }
 
 Filter::~Filter()
 {
-    m_inContent.clear();
-    m_exContent.clear();
+    _in_content.clear();
+    _ex_content.clear();
 }
 
-bool Filter::matchDir(std::string const & name) const
+bool Filter::match_dir(std::string const &name) const
 {
-    bool match = m_args.includeDirs().empty();
+    bool match = _args.includeDirs().empty();
 
     // Include filters
-    std::list<String>::const_iterator it = m_args.includeDirs().begin();
-    for (; !match && it != m_args.includeDirs().end(); ++it) {
-		match = fnmatch(*it, name, it->noCase());
+    auto it = _args.includeDirs().begin();
+    for (; !match && it != _args.includeDirs().end(); ++it) {
+        match = fnmatch(*it, name, it->noCase());
     }
 
     return match;
 }
 
-bool Filter::excludeDir(std::string const & name) const
+bool Filter::exclude_dir(std::string const &name) const
 {
     bool match = false;
 
     // Exclude filters
-    std::list<String>::const_iterator it = m_args.excludeDirs().begin();
-    for (; !match && it != m_args.excludeDirs().end(); ++it) {
-		match = fnmatch(*it, name, it->noCase());
-	}
+    auto it = _args.excludeDirs().begin();
+    for (; !match && it != _args.excludeDirs().end(); ++it) {
+        match = fnmatch(*it, name, it->noCase());
+    }
 
     return match;
 }
 
-bool Filter::matchFile(std::string const & name) const
+bool Filter::match_file(std::string const &name) const
 {
-    bool match = m_args.includeFiles().empty();
+    bool match = _args.includeFiles().empty();
 
     // Include filters
-    std::list<String>::const_iterator it = m_args.includeFiles().begin();
-    for (; !match && it != m_args.includeFiles().end(); ++it) {
-		match = fnmatch(*it, name, it->noCase());
+    auto it = _args.includeFiles().begin();
+    for (; !match && it != _args.includeFiles().end(); ++it) {
+        match = fnmatch(*it, name, it->noCase());
     }
 
     // Exclude filters
-    it = m_args.excludeFiles().begin();
-    for (; match && it != m_args.excludeFiles().end(); ++it) {
-		match = !fnmatch(*it, name, it->noCase());
+    it = _args.excludeFiles().begin();
+    for (; match && it != _args.excludeFiles().end(); ++it) {
+        match = !fnmatch(*it, name, it->noCase());
     }
 
     return match;
 }
 
-bool Filter::hasContentFilters() const
+bool Filter::has_content_filters() const
 {
-    return !m_inContent.empty();
+    return !_in_content.empty();
 }
 
-bool Filter::hasExcludeContentFilters() const
+bool Filter::has_exclude_content_filters() const
 {
-    return !m_exContent.empty();
+    return !_ex_content.empty();
 }
 
-bool Filter::printContent() const
+bool Filter::print_content() const
 {
-    return !m_inContent.empty() && m_args.allContent();
+    return !_in_content.empty() && _args.allContent();
 }
 
-bool Filter::matchContent(std::string const & line, Match * pmatch) const
+bool Filter::match_content(std::string_view line, Match *pmatch) const
 {
-    bool match = m_inContent.empty();
+    bool match = _in_content.empty();
 
     // Include filters
-    Regex::PtrList::const_iterator it = m_inContent.begin();
-    for (; !match && it != m_inContent.end(); ++it) {
+    Regex::PtrList::const_iterator it = _in_content.begin();
+    for (; !match && it != _in_content.end(); ++it) {
         match = (*it)->match(line, pmatch);
     }
     return match;
 }
 
-bool Filter::excludeContent(std::string const & line) const
+bool Filter::exclude_content(std::string_view line) const
 {
     bool exclude = false;
 
     // Exclude filters
-    Regex::PtrList::const_iterator it = m_exContent.begin();
-    for (; !exclude && it != m_exContent.end(); ++it) {
+    Regex::PtrList::const_iterator it = _ex_content.begin();
+    for (; !exclude && it != _ex_content.end(); ++it) {
         exclude = (*it)->match(line);
     }
     return exclude;
 }
 
-bool Filter::fnmatch(std::string const & pattern, std::string const & string, bool icase)
+bool Filter::fnmatch(std::string const &pattern, std::string const &string, bool icase)
 {
-#if defined(_UNIX)
-	// POSIX fnmatch
-	int const rval = ::fnmatch(pattern.c_str(), string.c_str(), icase ? FNM_CASEFOLD : 0);
-	if (rval != 0 && rval != FNM_NOMATCH) {
-		THROW_ERROR("Invalid pattern \"{}\" : {}", pattern, strerror(errno));
-	}
-	return (rval == 0);
-#endif
-#if defined(_WIN32)
-	return PathMatchSpecA(string.c_str(), pattern.c_str());
+#if defined(FF_UNIX)
+    // POSIX fnmatch
+    int const rval = ::fnmatch(pattern.c_str(), string.c_str(), icase ? FNM_CASEFOLD : 0);
+    if (rval != 0 && rval != FNM_NOMATCH) {
+        THROW_ERROR("Invalid pattern \"{}\" : {}", pattern, strerror(errno));
+    }
+    return (rval == 0);
+#elif defined(FF_WIN32)
+    return PathMatchSpecA(string.c_str(), pattern.c_str());
+#else
+    return false;
 #endif
 }
