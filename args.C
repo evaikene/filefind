@@ -152,27 +152,29 @@ Args::Args(int argc, char **argv)
 
         // Predefined directory filters
         {
-            StringList const           values = config.values("dirs");
-            StringList::const_iterator it     = values.begin();
+            auto const           values = config.values("dirs");
+            auto it     = values.begin();
             for (; it != values.end(); ++it) {
-                if (!it->no()) {
-                    _inDirs.push_back(*it);
+                ArgVal v{*it};
+                if (!v.no()) {
+                    _inDirs.push_back(std::move(v));
                 }
                 else {
-                    _exDirs.push_back(*it);
+                    _exDirs.push_back(std::move(v));
                 }
             }
         }
         // Predefined file name filters
         {
-            StringList const           values = config.values("files");
-            StringList::const_iterator it     = values.begin();
+            auto const           values = config.values("files");
+            auto it     = values.begin();
             for (; it != values.end(); ++it) {
-                if (!it->no()) {
-                    _inFiles.push_back(*it);
+                ArgVal v{*it};
+                if (v.no()) {
+                    _inFiles.push_back(std::move(v));
                 }
                 else {
-                    _exFiles.push_back(*it);
+                    _exFiles.push_back(std::move(v));
                 }
             }
         }
@@ -180,7 +182,7 @@ Args::Args(int argc, char **argv)
 
     char const *appName = argv[0];
     bool        no      = false;
-    CmdLine     cmdLine(_::opts);
+    CmdLine     cmdLine(*_::opts);
     CmdLineArg  arg;
     char const *path = nullptr;
     while ((arg = cmdLine.next(argc, argv))) {
@@ -221,8 +223,8 @@ Args::Args(int argc, char **argv)
             }
             case 'c':
             case 'C': {
-                bool const   ic = isupper(arg.what());
-                String const s(arg.opt(), ic);
+                bool const ic = isupper(arg.what());
+                ArgVal     s{arg.opt(), ic};
                 if (s.list()) {
                     // This is a list definition; get content filters from the configuration
                     addFilters(config, s, no, ic, _inContent, _exContent);
@@ -230,10 +232,10 @@ Args::Args(int argc, char **argv)
                 else {
                     no |= s.no();
                     if (!no) {
-                        _inContent.push_back(s);
+                        _inContent.push_back(std::move(s));
                     }
                     else {
-                        _exContent.push_back(s);
+                        _exContent.push_back(std::move(s));
                         no = false;
                     }
                 }
@@ -241,8 +243,8 @@ Args::Args(int argc, char **argv)
             }
             case 'd':
             case 'D': {
-                bool const   ic = isupper(arg.what());
-                String const s(arg.opt(), ic);
+                bool const ic = isupper(arg.what());
+                ArgVal     s{arg.opt(), ic};
                 if (s.list()) {
                     // This is a list definition; get directory names from the configuration
                     addFilters(config, s, no, ic, _inDirs, _exDirs);
@@ -250,10 +252,10 @@ Args::Args(int argc, char **argv)
                 else {
                     no |= s.no();
                     if (!no) {
-                        _inDirs.push_back(s);
+                        _inDirs.push_back(std::move(s));
                     }
                     else {
-                        _exDirs.push_back(s);
+                        _exDirs.push_back(std::move(s));
                         no = false;
                     }
                 }
@@ -261,8 +263,8 @@ Args::Args(int argc, char **argv)
             }
             case 'f':
             case 'F': {
-                bool const   ic = isupper(arg.what());
-                String const s(arg.opt(), ic);
+                bool const ic = isupper(arg.what());
+                ArgVal     s(arg.opt(), ic);
                 if (s.list()) {
                     // This is a list definition; get file names from the configuration
                     addFilters(config, s, no, ic, _inFiles, _exFiles);
@@ -271,10 +273,10 @@ Args::Args(int argc, char **argv)
                     // This is an individual file name from the command line
                     no |= s.no();
                     if (!no) {
-                        _inFiles.push_back(s);
+                        _inFiles.push_back(std::move(s));
                     }
                     else {
-                        _exFiles.push_back(s);
+                        _exFiles.push_back(std::move(s));
                         no = false;
                     }
                 }
@@ -306,12 +308,14 @@ Args::Args(int argc, char **argv)
     // Process the path
     if (path != nullptr) {
         if (_inFiles.empty() && _exFiles.empty()) {
-            _inFiles.push_back(path);
+            _inFiles.emplace_back(path);
         }
         else {
             _path = path;
             // Remove trailing slashes
-            while (_path.size() > 1 && _path.at(_path.size() - 1) == '/') { _path.resize(_path.size() - 1); }
+            while (_path.size() > 1 && _path.at(_path.size() - 1) == '/') {
+                _path.resize(_path.size() - 1);
+            }
         }
     }
 
@@ -325,7 +329,7 @@ Args::Args(int argc, char **argv)
         _valid = false;
         return;
     }
-    if (!_exec.empty() && _allContent) {
+    if (_exec && _allContent) {
         fmt::println(stderr, "--exec option cannot be used with the --all option.");
         _valid = false;
         return;
@@ -334,25 +338,26 @@ Args::Args(int argc, char **argv)
     _exit = false;
 }
 
-void Args::addFilters(Config const &config, String const &list, bool no, bool ic, StringList &in, StringList &ex)
+void Args::addFilters(Config const &config, ArgVal const &list, bool no, bool ic, ArgValList &in, ArgValList &ex)
 {
     if (!config.valid()) {
         fmt::println(stderr, "No configuration found with list definitions");
         return;
     }
-    StringList const values = config.values(list);
+    auto const values = config.values(list.str());
     if (values.empty()) {
         fmt::println(stderr, "List @{} is empty or not found", list);
         return;
     }
-    StringList::const_iterator it = values.begin();
+    auto it = values.begin();
     for (; it != values.end(); ++it) {
-        no |= it->no();
+        ArgVal v{*it, ic};
+        no |= v.no();
         if (!no) {
-            in.push_back(String(*it, ic));
+            in.push_back(std::move(v));
         }
         else {
-            ex.push_back(String(*it, ic));
+            ex.push_back(std::move(v));
         }
     }
 }

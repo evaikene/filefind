@@ -17,13 +17,13 @@ auto strerror(int errnum) -> std::string;
 /// Get an environment variable
 /// @param[in] name Name of the variable
 /// @return Environment value or an invalid optional
-auto getenv(std::string const &name) -> std::optional<std::string>;
+auto getenv(char const *name) -> std::optional<std::string>;
 
-using FilePtr = std::unique_ptr<FILE, void (*) (FILE *)>;
+using FilePtr = std::unique_ptr<FILE, void (*)(FILE *)>;
 
 /// Returns an invalid file pointer
 /// @return Invalid file pointer
-auto invalid_file() -> FilePtr;
+auto InvalidFilePtr() -> FilePtr;
 
 /// Open a file stream
 /// @param[in] path Name of the file

@@ -43,7 +43,7 @@ bool Filter::match_dir(std::string const &name) const
     // Include filters
     auto it = _args.includeDirs().begin();
     for (; !match && it != _args.includeDirs().end(); ++it) {
-        match = fnmatch(*it, name, it->noCase());
+        match = fnmatch(it->str(), name, it->noCase());
     }
 
     return match;
@@ -56,7 +56,7 @@ bool Filter::exclude_dir(std::string const &name) const
     // Exclude filters
     auto it = _args.excludeDirs().begin();
     for (; !match && it != _args.excludeDirs().end(); ++it) {
-        match = fnmatch(*it, name, it->noCase());
+        match = fnmatch(it->str(), name, it->noCase());
     }
 
     return match;
@@ -69,13 +69,13 @@ bool Filter::match_file(std::string const &name) const
     // Include filters
     auto it = _args.includeFiles().begin();
     for (; !match && it != _args.includeFiles().end(); ++it) {
-        match = fnmatch(*it, name, it->noCase());
+        match = fnmatch(it->str(), name, it->noCase());
     }
 
     // Exclude filters
     it = _args.excludeFiles().begin();
     for (; match && it != _args.excludeFiles().end(); ++it) {
-        match = !fnmatch(*it, name, it->noCase());
+        match = !fnmatch(it->str(), name, it->noCase());
     }
 
     return match;

@@ -52,10 +52,10 @@ Search::~Search()
 void Search::search() const
 {
     // Recursively search for files
-    findFiles(_args.path(), "", _filter.match_dir(""));
+    find_files(_args.path(), "", _filter.match_dir(""));
 }
 
-void Search::findInFile(std::string const &path) const
+void Search::find_in_file(std::string const &path) const
 {
     auto f = Utils::fopen(path, "r");
     if (!f) {
@@ -91,11 +91,11 @@ void Search::findInFile(std::string const &path) const
                     fmt::print("{} +{} : \"", path, lineno);
 
                     // Print content
-                    size_t idx = printMatch(buf, pmatch, nocolor);
+                    size_t idx = print_match(buf, pmatch, nocolor);
 
                     // Repeat search for more matches
                     while (idx < sz && _filter.match_content(&buf[idx], &pmatch)) {
-                        idx += printMatch(&buf[idx], pmatch, nocolor);
+                        idx += print_match(&buf[idx], pmatch, nocolor);
                     }
 
                     // The remainder of the line
@@ -116,9 +116,9 @@ void Search::findInFile(std::string const &path) const
                     break;
                 }
             }
-            else if (!_args.execCmd().empty()) {
+            else if (_args.execCmd()) {
                 // Run the command and exit
-                execCmd(_args.execCmd(), path);
+                exec_cmd(*_args.execCmd(), path);
                 break;
             }
             else {
@@ -136,7 +136,7 @@ void Search::findInFile(std::string const &path) const
     }
 }
 
-bool Search::excludeFileByContent(std::string const &path) const
+bool Search::exclude_file_by_content(std::string const &path) const
 {
     bool rval = false;
     auto f    = Utils::fopen(path, "r");
@@ -159,7 +159,7 @@ bool Search::excludeFileByContent(std::string const &path) const
     return rval;
 }
 
-size_t Search::printMatch(char const *buf, Match const &pmatch, bool nocolor) const
+size_t Search::print_match(char const *buf, Match const &pmatch, bool nocolor) const
 {
     size_t const sz              = strlen(buf);
     char         s1[_::BUF_SIZE] = "";

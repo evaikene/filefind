@@ -9,7 +9,7 @@ namespace re2 {
 class RE2;
 }
 
-class String;
+class ArgVal;
 
 class Match {
 public:
@@ -42,7 +42,7 @@ public:
     using Ptr     = std::unique_ptr<Regex>;
     using PtrList = std::vector<Ptr>;
 
-    explicit Regex(String const &r);
+    explicit Regex(ArgVal const &r);
     ~Regex();
 
     inline bool valid() const { return _valid; }

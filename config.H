@@ -1,10 +1,9 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
 
-#include "args.H"
-
-#include <list>
-#include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 /**
  * @brief The configuration class
@@ -27,39 +26,35 @@
  * Leading and trailing whitespace in section names and values is ignored.
  * Values can start with '!' making it a 'not' value.
  */
-class Config
-{
+class Config {
 public:
 
+    using StringList = std::vector<std::string>;
+
     Config(std::string const &fileName, std::optional<std::string> const &fullPath = std::nullopt);
-    inline ~Config()
-    {}
+
+    inline ~Config() {}
 
     /// True if the configuration is valid and can be used
-    inline bool valid() const
-    {
-        return _valid;
-    }
+    inline bool valid() const { return _valid; }
 
     /// Returns values from the specified section
-    StringList values(std::string const &section) const;
-
+    auto values(std::string const &section) const -> StringList;
 
 protected:
 
-    using SectionsMap = std::map<std::string, StringList>;
+    using SectionsMap = std::unordered_map<std::string, StringList>;
 
-    bool _valid;
+    bool        _valid;
     SectionsMap _sections;
 
-    bool loadConfig(std::string const & fileName, std::optional<std::string> const &fullPath);
+    bool loadConfig(std::string const &fileName, std::optional<std::string> const &fullPath);
 
-    static std::string getLocalConfig(std::string const &fileName);
-    static std::string getSystemConfig(std::string const &fileName);
+    static auto getLocalConfig(std::string const &fileName) -> std::string;
+    static auto getSystemConfig(std::string const &fileName) -> std::string;
 
-    static void trim(std::string &s);
-    static bool isSection(std::string &s);
-
+    static void trim(std::string_view &s);
+    static bool is_section(std::string_view &s);
 };
 
 #endif // CONFIG_H

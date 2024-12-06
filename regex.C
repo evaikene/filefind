@@ -6,13 +6,13 @@
 
 // -----------------------------------------------------------------------------
 
-Regex::Regex(String const &r)
+Regex::Regex(ArgVal const &r)
 {
     // Compile regex
     re2::RE2::Options opts;
     opts.set_case_sensitive(!r.noCase());
     opts.set_log_errors(false);
-    _rx    = std::make_unique<re2::RE2>(r, opts);
+    _rx    = std::make_unique<re2::RE2>(r.str(), opts);
     _valid = _rx->ok();
     if (!_valid) {
         throw Error{_rx->error()};

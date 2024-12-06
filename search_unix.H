@@ -15,11 +15,9 @@ public:
 
 protected:
 
-    static void closedir(DIR * d);
+    void find_files(std::string const & root, std::string const & path, bool dirMatch) const override;
 
-    void findFiles(std::string const & root, std::string const & path, bool dirMatch) const override;
-
-    void execCmd(std::string const & cmd, std::string const & path) const override;
+    void exec_cmd(std::string const & cmd, std::string const & path) const override;
 
     unsigned char getType(std::string const & pathname, unsigned char const d) const;
 

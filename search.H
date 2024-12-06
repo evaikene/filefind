@@ -48,15 +48,15 @@ protected:
     /// Destructor
     virtual ~Search();
 
-    bool excludeFileByContent(std::string const &path) const;
+    bool exclude_file_by_content(std::string const &path) const;
 
-    void findInFile(std::string const &path) const;
+    void find_in_file(std::string const &path) const;
 
-    virtual size_t printMatch(char const *buf, Match const &pmatch, bool nocolor) const;
+    virtual size_t print_match(char const *buf, Match const &pmatch, bool nocolor) const;
 
-    virtual void findFiles(std::string const &root, std::string const &path, bool dirMatch) const = 0;
+    virtual void find_files(std::string const &root, std::string const &path, bool dirMatch) const = 0;
 
-    virtual void execCmd(std::string const &cmd, std::string const &path) const = 0;
+    virtual void exec_cmd(std::string const &cmd, std::string const &path) const = 0;
 
 private:
 

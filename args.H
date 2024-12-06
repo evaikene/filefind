@@ -1,77 +1,132 @@
 #ifndef ARGS_H_INCLUDED
 #  define ARGS_H_INCLUDED
 
+#include <fmt/format.h>
+
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class Config;
 
-class String : public std::string {
+/// Command line argument value
+class ArgVal {
 public:
 
-    inline String(char const *s, bool nc = false)
-        : _noCase(nc)
-        , _no(false)
-        , _list(false)
+    /// Ctor
+    /// @param[in] s Argument value
+    /// @param[in] nc Case insensitive
+    inline ArgVal(char const *s, bool nc = false)
+        : _flags(nc ? Flags::NO_CASE : 0)
     {
-        setValue(s != nullptr ? std::string(s) : std::string());
+        set_value(s);
     }
 
-    inline String(std::string const &s, bool nc = false)
-        : _noCase(nc)
-        , _no(false)
-        , _list(false)
+    /// Ctor
+    /// @param[in] s Argument value
+    /// @param[in] nc Case insensitive
+    inline ArgVal(std::string const &s, bool nc = false)
+        : _flags(nc ? Flags::NO_CASE : 0)
     {
-        setValue(s);
+        set_value(s);
     }
 
-    inline explicit String(String const &o)
-        : std::string(o)
-        , _noCase(o._noCase)
-        , _no(o._no)
-        , _list(o._list)
-    {}
-
-    inline String &operator=(String const &o)
+    /// Move ctor
+    inline ArgVal(ArgVal &&rhs)
     {
-        if (this != &o) {
-            std::string::operator=(o);
-            _noCase = o._noCase;
-            _no     = o._no;
-            _list   = o._list;
+        swap(rhs);
+    }
+
+    /// Move assignment
+    inline ArgVal &operator=(ArgVal &&rhs)
+    {
+        if (this != &rhs) {
+            clear();
+            swap(rhs);
         }
         return *this;
     }
 
-    inline bool noCase() const { return _noCase; }
+    /// Avoid copying
+    ArgVal(ArgVal const &) = delete;
+    ArgVal &operator=(ArgVal const &) = delete;
 
-    inline bool no() const { return _no; }
+    /// Returns the string value
+    inline auto &str() const { return _value; }
 
-    inline bool list() const { return _list; }
+    inline bool noCase() const { return _flags & Flags::NO_CASE; };
+
+    inline bool no() const { return _flags & Flags::NOT; };
+
+    inline bool list() const { return _flags & Flags::LIST; };
 
 private:
 
-    bool _noCase;
-    bool _no;
-    bool _list;
+    /// Flags
+    enum Flags : uint8_t {
+        NO_CASE = 0x01, ///< Case insensitive
+        NOT     = 0x02, ///< Exclude
+        LIST    = 0x04  ///< List
+    };
 
-    inline void setValue(std::string const &s)
+    uint8_t _flags = 0;
+
+    std::string _value;
+
+    inline void clear()
     {
-        if (!s.empty() && '@' == s.at(0)) {
-            std::string::assign(s);
-            _list = true;
+        _flags = 0;
+        _value.clear();
+    }
+
+    inline void swap(ArgVal &rhs)
+    {
+        std::swap(_flags, rhs._flags);
+        _value.swap(rhs._value);
+    }
+
+    inline void set_value(char const *s)
+    {
+        if (s == nullptr || s[0] == '\0') {
+            return;
         }
-        else if (!s.empty() && '!' == s.at(0)) {
-            std::string::assign(s, 1, std::string::npos);
-            _no = true;
+        if (s[0] == '@') {
+            set_value(std::string{s});
+            _flags |= Flags::LIST;
+        }
+        else if (s[0] == '!') {
+            set_value(std::string{s + 1});
+            _flags |= Flags::NOT;
         }
         else {
-            std::string::assign(s);
+            set_value(std::string{s});
         }
+    }
+
+    inline void set_value(std::string const &s)
+    {
+        _value = s;
+    }
+
+};
+
+template <>
+struct fmt::formatter<ArgVal> : public fmt::formatter<std::string_view> {
+    template <typename FormatContext>
+    constexpr auto parse(FormatContext &ctx)
+    {
+        return fmt::formatter<std::string_view>::parse(ctx);
+    }
+
+    template <typename FormatContext>
+    auto format(ArgVal const &val, FormatContext &ctx) const
+    {
+        return fmt::formatter<std::string_view>::format(val.str(), ctx);
     }
 };
 
-using StringList = std::vector<String>;
+using ArgValList = std::vector<ArgVal>;
 
 class Args {
 public:
@@ -116,24 +171,23 @@ private:
 
     static void printVersion();
 
-    static void addFilters(Config const &config, String const &list, bool no, bool ic, StringList &in, StringList &ex);
+    static void addFilters(Config const &config, ArgVal const &list, bool no, bool ic, ArgValList &in, ArgValList &ex);
 
     bool _exit;
     bool _valid;
 
-    std::string _grammar;
-    std::string _path;
-    StringList  _inFiles;
-    StringList  _exFiles;
-    StringList  _inDirs;
-    StringList  _exDirs;
-    StringList  _inContent;
-    StringList  _exContent;
-    bool        _allContent;
-    bool        _ascii;
-    bool        _noColor;
-    int         _extraContent;
-    std::string _exec;
+    std::string                _path;
+    ArgValList                 _inFiles;
+    ArgValList                 _exFiles;
+    ArgValList                 _inDirs;
+    ArgValList                 _exDirs;
+    ArgValList                 _inContent;
+    ArgValList                 _exContent;
+    bool                       _allContent;
+    bool                       _ascii;
+    bool                       _noColor;
+    int                        _extraContent;
+    std::optional<std::string> _exec;
 };
 
 #endif // ARGS_H

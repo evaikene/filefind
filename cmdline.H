@@ -1,81 +1,62 @@
 #ifndef CMDLINE_H
 #define CMDLINE_H
 
-class CmdLineArg
-{
+class CmdLineArg {
 public:
 
-    static char const EMPTY = '\0';
-    static char const NO_OPTION = '\1';
-    static char const INVALID_OPTION = '\2';
-    static char const REQUIRES_ARGUMENT = '\3';
+    static constexpr char EMPTY             = '\0';
+    static constexpr char NO_OPTION         = '\1';
+    static constexpr char INVALID_OPTION    = '\2';
+    static constexpr char REQUIRES_ARGUMENT = '\3';
 
-    inline CmdLineArg()
-        : _what(EMPTY)
-        , _name(nullptr)
-        , _opt(nullptr)
-    {}
+    inline CmdLineArg() = default;
 
-    inline CmdLineArg(char what, char const * name, char const * opt = nullptr)
+    inline CmdLineArg(char what, char const *name, char const *opt = nullptr)
         : _what(what)
         , _name(name)
         , _opt(opt)
     {}
 
-    inline operator bool () const
-    {
-        return (_what != EMPTY);
-    }
+    inline operator bool() const { return (_what != EMPTY); }
 
-    inline char what() const
-    {
-        return _what;
-    }
+    inline auto what() const { return _what; }
 
-    inline char const * name() const
-    {
-        return _name;
-    }
+    inline auto name() const { return _name; }
 
-    inline char const * opt() const
-    {
-        return _opt;
-    }
+    inline auto opt() const { return _opt; }
 
 private:
 
-    char _what;
-    char const * _name;
-    char const * _opt;
+    char        _what = EMPTY;
+    char const *_name = nullptr;
+    char const *_opt  = nullptr;
 };
 
-struct CmdLineOption
-{
+struct CmdLineOption {
+
     enum Flag {
         Null,
         NoArgument,
         RequiredArgument
     };
 
-    char const * longName;
-    Flag flag;
-    char const shortName;
+    char const *longName  = nullptr;
+    Flag        flag      = Flag::Null;
+    char const  shortName = '\0';
 };
 
-class CmdLine
-{
+class CmdLine {
 public:
 
-    CmdLine(CmdLineOption const * opts);
+    CmdLine(CmdLineOption const &opts);
 
-    CmdLineArg const next(int argc, char * argv[]);
+    auto next(int argc, char *argv[]) -> CmdLineArg const;
 
 private:
 
     int _idx;
 
-    CmdLineOption const * _opts;
-
+    CmdLineOption const &_opts;
 };
 
 #endif

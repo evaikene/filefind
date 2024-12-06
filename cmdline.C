@@ -1,9 +1,8 @@
 #include "cmdline.H"
 
 #include <string.h>
-#include <stdio.h>
 
-CmdLine::CmdLine(CmdLineOption const * opts)
+CmdLine::CmdLine(CmdLineOption const &opts)
     : _idx(0)
     , _opts(opts)
 {}
@@ -39,7 +38,7 @@ CmdLineArg const CmdLine::next(int argc, char * argv[])
     }
 
     // The rest shall be the command line option
-    CmdLineOption const * opt = _opts;
+    auto opt = &_opts;
     char const * end = nullptr;
     for (; opt->shortName != '\0'; ++opt) {
         if (longOpt) {
