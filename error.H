@@ -6,25 +6,17 @@
 #include <stdexcept>
 #include <string>
 
-class Error : public std::exception {
+class Error : public std::runtime_error {
 public:
 
-    inline explicit Error(std::string msg)
-        : _msg(std::move(msg))
+    inline explicit Error(std::string const &msg)
+        : std::runtime_error(msg)
     {}
 
-    inline virtual ~Error() noexcept {}
-
-    inline virtual char const *what() const noexcept { return _msg.c_str(); }
-
-protected:
-
-    std::string _msg;
+    template <typename... Args>
+    Error(std::string const &fmt, Args const &...args)
+        : std::runtime_error(fmt::format(fmt, args...))
+    {}
 };
-
-#define THROW_ERROR(format_str, ...)                                                                                   \
-    {                                                                                                                  \
-        throw Error{fmt::format(format_str, __VA_ARGS__)};                                                             \
-    }
 
 #endif

@@ -1,24 +1,24 @@
 #include "cmdline.H"
 
-#include <string.h>
+#include <cstring>
 
 CmdLine::CmdLine(CmdLineOption const &opts)
     : _idx(0)
     , _opts(opts)
 {}
 
-CmdLineArg const CmdLine::next(int argc, char * argv[])
+auto CmdLine::next(int argc, char **argv) -> CmdLineArg
 {
     ++_idx;
     if (_idx >= argc) {
-        return CmdLineArg();
+        return {};
     }
 
     char const * arg = argv[_idx];
 
     // Is it a command line argument?
     if (*arg != '-') {
-        return CmdLineArg(CmdLineArg::NO_OPTION, argv[_idx]);
+        return {CmdLineArg::NO_OPTION, argv[_idx]};
     }
 
     // Otherwise it is a short or long command line option
@@ -26,19 +26,19 @@ CmdLineArg const CmdLine::next(int argc, char * argv[])
     if (*arg == '-') {
         ++arg;
         if (*arg == '\0') {
-            return CmdLineArg(CmdLineArg::INVALID_OPTION, argv[_idx]);
+            return {CmdLineArg::INVALID_OPTION, argv[_idx]};
         }
     }
     if (*arg == '-') {
         ++arg;
         if (*arg == '\0') {
-            return CmdLineArg(CmdLineArg::INVALID_OPTION, argv[_idx]);
+            return {CmdLineArg::INVALID_OPTION, argv[_idx]};
         }
         longOpt = true;
     }
 
     // The rest shall be the command line option
-    auto opt = &_opts;
+    auto const *opt = &_opts;
     char const * end = nullptr;
     for (; opt->shortName != '\0'; ++opt) {
         if (longOpt) {
@@ -62,7 +62,7 @@ CmdLineArg const CmdLine::next(int argc, char * argv[])
 
     // Is it an invalid option
     if (opt->shortName == '\0' || end == nullptr) {
-        return CmdLineArg(CmdLineArg::INVALID_OPTION, argv[_idx]);
+        return {CmdLineArg::INVALID_OPTION, argv[_idx]};
     }
 
     // Does it require arguments?
@@ -70,23 +70,23 @@ CmdLineArg const CmdLine::next(int argc, char * argv[])
         // Shall end with '=' or '\0'
         if (*end == '=') {
             ++end;
-            return CmdLineArg(opt->shortName, opt->longName, end);
+            return {opt->shortName, opt->longName, end};
         }
-        else if (*end == '\0') {
+        if (*end == '\0') {
             // Argument is next
             ++_idx;
             if (_idx >= argc) {
-                return CmdLineArg(CmdLineArg::REQUIRES_ARGUMENT, argv[_idx - 1]);
+                return {CmdLineArg::REQUIRES_ARGUMENT, argv[_idx - 1]};
             }
-            return CmdLineArg(opt->shortName, opt->longName, argv[_idx]);
+            return {opt->shortName, opt->longName, argv[_idx]};
         }
     }
 
     // Does not require arguments; end shall be '\0'
     if (*end == '\0') {
-        return CmdLineArg(opt->shortName, opt->longName);
+        return {opt->shortName, opt->longName};
     }
 
     // Otherwise this is an invalid option
-    return CmdLineArg(CmdLineArg::INVALID_OPTION, argv[_idx]);
+    return {CmdLineArg::INVALID_OPTION, argv[_idx]};
 }

@@ -2,12 +2,13 @@
 #include "error.H"
 #include "search.H"
 
+#include "fmt/base.h"
 #include "fmt/color.h"
-#include "fmt/format.h"
 
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
-int main(int argc, char **argv)
+auto main(int argc, char **argv) -> int
 {
     // Parse command line arguments
     Args args(argc, argv);

@@ -11,17 +11,17 @@
 #  include "search_unix.H"
 #endif
 
-#include <string.h>
+#include <cstring>
 
-namespace _ {
+namespace {
 
-static constexpr size_t BUF_SIZE = 4096;
+constexpr size_t BUF_SIZE = 4096;
 
-} // namespace _
+} // namespace
 
 Search *Search::_instance = nullptr;
 
-Search &Search::instance(Args const &args)
+auto Search::instance(Args const &args) -> Search &
 {
     if (nullptr == _instance) {
 #if defined(FF_WIN32)
@@ -46,8 +46,7 @@ Search::Search(Args const &args)
     , _filter(args)
 {}
 
-Search::~Search()
-{}
+Search::~Search() = default;
 
 void Search::search() const
 {
@@ -67,12 +66,12 @@ void Search::find_in_file(std::string const &path) const
         return;
     }
 
-    char       buf[_::BUF_SIZE];
+    char       buf[BUF_SIZE];
     int        lineno       = 0;
     bool       binary       = false;
     int        linesToPrint = 0;
     bool const nocolor      = _args.noColor();
-    while (fgets(buf, _::BUF_SIZE, f.get()) != nullptr) {
+    while (fgets(buf, BUF_SIZE, f.get()) != nullptr) {
         // Remove trailing CR and LF characters
         size_t sz = strlen(buf);
         while (sz > 0 && (buf[sz - 1] == '\n' || buf[sz - 1] == '\r')) {
@@ -100,8 +99,8 @@ void Search::find_in_file(std::string const &path) const
 
                     // The remainder of the line
                     if (idx < sz) {
-                        char s3[_::BUF_SIZE];
-                        Utils::strncpy_s(s3, _::BUF_SIZE, &buf[idx], _::BUF_SIZE - 1);
+                        char s3[BUF_SIZE];
+                        Utils::strncpy_s(s3, BUF_SIZE, &buf[idx], BUF_SIZE - 1);
                         fmt::println("{}\"", s3);
                     }
                     else {
@@ -136,7 +135,7 @@ void Search::find_in_file(std::string const &path) const
     }
 }
 
-bool Search::exclude_file_by_content(std::string const &path) const
+auto Search::exclude_file_by_content(std::string const &path) const -> bool
 {
     bool rval = false;
     auto f    = Utils::fopen(path, "r");
@@ -149,8 +148,8 @@ bool Search::exclude_file_by_content(std::string const &path) const
         return rval;
     }
 
-    char buf[_::BUF_SIZE];
-    while (!rval && fgets(buf, sizeof(buf), f.get()) != nullptr) {
+    char buf[BUF_SIZE];
+    while (!rval && fgets(buf, BUF_SIZE, f.get()) != nullptr) {
         // Remove trailing CR and LF characters
         size_t sz = strlen(buf);
         while (sz > 0 && (buf[sz - 1] == '\n' || buf[sz - 1] == '\r')) { buf[--sz] = '\0'; }
@@ -159,16 +158,16 @@ bool Search::exclude_file_by_content(std::string const &path) const
     return rval;
 }
 
-size_t Search::print_match(char const *buf, Match const &pmatch, bool nocolor) const
+auto Search::print_match(char const *buf, Match const &pmatch, bool nocolor) const -> size_t
 {
-    size_t const sz              = strlen(buf);
-    char         s1[_::BUF_SIZE] = "";
-    char         s2[_::BUF_SIZE] = "";
-    size_t       msz             = std::min<size_t>(pmatch.position(), _::BUF_SIZE - 1);
+    size_t const sz           = strlen(buf);
+    char         s1[BUF_SIZE] = "";
+    char         s2[BUF_SIZE] = "";
+    size_t       msz          = std::min<size_t>(pmatch.position(), BUF_SIZE - 1);
     Utils::strncpy_s(s1, msz + 1, buf, msz);
     size_t idx = msz;
     if (idx < sz) {
-        msz = std::min<size_t>(pmatch.length(), _::BUF_SIZE - 1);
+        msz = std::min<size_t>(pmatch.length(), BUF_SIZE - 1);
         Utils::strncpy_s(s2, msz + 1, &buf[idx], msz);
         idx += msz;
     }

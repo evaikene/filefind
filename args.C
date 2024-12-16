@@ -5,16 +5,15 @@
 
 #include <fmt/format.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <array>
 
 #if defined(FF_UNIX)
 #  include <unistd.h>
 #endif
 
-namespace _ {
+namespace {
 
-static constexpr char const *USAGE = R"(
+constexpr char const *USAGE = R"(
 USAGE: {0} [args] [path]
 
 where 'path' is an optional path to start searching. Uses the current working directory
@@ -87,18 +86,18 @@ of files "@cpp":
 )";
 
 #if defined(FF_AIX)
-static constexpr char const *NOTES                                                = R"(
+constexpr char const *NOTES                                                = R"(
 NB! File and directory name filters are always case sensitive on IBM PASE for i
 due to the fnmatch(3) limitations.
 )";
-elif                         defined(FF_WIN32) static constexpr char const *NOTES = R"(
+elif                  defined(FF_WIN32) static constexpr char const *NOTES = R"(
 NB! File and directory name filters are always case insensitive on Windows.
 )";
 #else
-static constexpr char const *NOTES = "";
+constexpr char const *NOTES = "";
 #endif
 
-static constexpr CmdLineOption const opts[] = {
+constexpr std::array<CmdLineOption, 15> opts = {{
     {"all",      CmdLineOption::NoArgument,       'a'},
     {"ascii",    CmdLineOption::NoArgument,       'A'},
     {"content",  CmdLineOption::RequiredArgument, 'c'},
@@ -113,17 +112,17 @@ static constexpr CmdLineOption const opts[] = {
     {"not",      CmdLineOption::NoArgument,       'n'},
     {"nocolor",  CmdLineOption::NoArgument,       'o'},
     {"version",  CmdLineOption::NoArgument,       'v'},
-    {nullptr,    CmdLineOption::Null,             0  }
-};
+    {nullptr,    CmdLineOption::Null,              0 }
+}};
 
-static constexpr char const *CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
-static constexpr char const *CONFIG_FILE_NAME     = "filefind";
+constexpr char const *CONFIG_FILE_NAME_ENV = "FILEFIND_CONFIG";
+constexpr char const *CONFIG_FILE_NAME     = "filefind";
 
-} // namespace _
+} // namespace
 
 void Args::printUsage(bool err, char const *appName)
 {
-    fmt::print(err ? stderr : stdout, _::USAGE, appName, _::NOTES);
+    fmt::print(err ? stderr : stdout, USAGE, appName, NOTES);
 }
 
 void Args::printVersion()
@@ -133,8 +132,8 @@ void Args::printVersion()
 }
 
 Args::Args(int argc, char **argv)
-    : _valid(true)
-    , _exit(true)
+    : _exit(true)
+    , _valid(true)
     , _path(".")
     , _allContent(false)
     , _ascii(false)
@@ -146,14 +145,14 @@ Args::Args(int argc, char **argv)
     , _extraContent(0)
 {
     // Use the configuration file for initial values
-    auto const configFileName = Utils::getenv(_::CONFIG_FILE_NAME_ENV);
-    Config     config(_::CONFIG_FILE_NAME, configFileName);
+    auto const configFileName = Utils::getenv(CONFIG_FILE_NAME_ENV);
+    Config     config{CONFIG_FILE_NAME, configFileName};
     if (config.valid()) {
 
         // Predefined directory filters
         {
-            auto const           values = config.values("dirs");
-            auto it     = values.begin();
+            auto const values = config.values("dirs");
+            auto       it     = values.begin();
             for (; it != values.end(); ++it) {
                 ArgVal v{*it};
                 if (!v.no()) {
@@ -166,8 +165,8 @@ Args::Args(int argc, char **argv)
         }
         // Predefined file name filters
         {
-            auto const           values = config.values("files");
-            auto it     = values.begin();
+            auto const values = config.values("files");
+            auto       it     = values.begin();
             for (; it != values.end(); ++it) {
                 ArgVal v{*it};
                 if (v.no()) {
@@ -182,7 +181,7 @@ Args::Args(int argc, char **argv)
 
     char const *appName = argv[0];
     bool        no      = false;
-    CmdLine     cmdLine(*_::opts);
+    CmdLine     cmdLine{*opts.data()};
     CmdLineArg  arg;
     char const *path = nullptr;
     while ((arg = cmdLine.next(argc, argv))) {
@@ -200,8 +199,10 @@ Args::Args(int argc, char **argv)
                 break;
             }
             case 'e': {
+                constexpr int BASE = 10;
+
                 char *e       = nullptr;
-                _extraContent = int(strtol(arg.opt(), &e, 10));
+                _extraContent = int(strtol(arg.opt(), &e, BASE));
                 if (e == nullptr || *e != '\0') {
                     fmt::println(stderr, "Invalid value \"{}\"", arg.opt());
                     _valid = false;
@@ -223,7 +224,7 @@ Args::Args(int argc, char **argv)
             }
             case 'c':
             case 'C': {
-                bool const ic = isupper(arg.what());
+                bool const ic = isupper(arg.what()) != 0;
                 ArgVal     s{arg.opt(), ic};
                 if (s.list()) {
                     // This is a list definition; get content filters from the configuration
@@ -243,7 +244,7 @@ Args::Args(int argc, char **argv)
             }
             case 'd':
             case 'D': {
-                bool const ic = isupper(arg.what());
+                bool const ic = isupper(arg.what()) != 0;
                 ArgVal     s{arg.opt(), ic};
                 if (s.list()) {
                     // This is a list definition; get directory names from the configuration
@@ -263,7 +264,7 @@ Args::Args(int argc, char **argv)
             }
             case 'f':
             case 'F': {
-                bool const ic = isupper(arg.what());
+                bool const ic = isupper(arg.what()) != 0;
                 ArgVal     s(arg.opt(), ic);
                 if (s.list()) {
                     // This is a list definition; get file names from the configuration
@@ -313,9 +314,7 @@ Args::Args(int argc, char **argv)
         else {
             _path = path;
             // Remove trailing slashes
-            while (_path.size() > 1 && _path.at(_path.size() - 1) == '/') {
-                _path.resize(_path.size() - 1);
-            }
+            while (_path.size() > 1 && _path.at(_path.size() - 1) == '/') { _path.resize(_path.size() - 1); }
         }
     }
 

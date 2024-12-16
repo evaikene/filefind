@@ -21,14 +21,15 @@ Regex::Regex(ArgVal const &r)
 
 Regex::~Regex() = default;
 
-bool Regex::match(std::string_view s, Match *pmatch) const
+auto Regex::match(std::string_view s, Match *pmatch) const -> bool
 {
-    if (!_rx)
+    if (!_rx) {
         return false;
+    }
     re2::StringPiece const str{s.data(), s.size()};
     re2::StringPiece       substr;
     auto const             result = _rx->Match(str, 0, str.size(), re2::RE2::UNANCHORED, &substr, 1);
-    if (result && pmatch) {
+    if (result && (pmatch != nullptr)) {
         pmatch->set_pos_and_len(substr.data() - str.data(), substr.size());
     }
     return result;

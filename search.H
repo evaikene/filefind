@@ -3,8 +3,6 @@
 
 #include "filter.H"
 
-#include <stdio.h>
-
 #include <string>
 
 class Args;
@@ -14,7 +12,7 @@ class Search {
 public:
 
     /// Returns the platform-specific instance
-    static Search &instance(Args const &args);
+    static auto instance(Args const &args) -> Search &;
 
     /// Destroys the global instance
     static void destroyInstance();
@@ -29,8 +27,8 @@ public:
     Search(Search &&) = delete;
 
     /// Disabled assignment operators
-    Search &operator=(Search const &) = delete;
-    Search &operator=(Search &&)      = delete;
+    auto operator=(Search const &) -> Search & = delete;
+    auto operator=(Search &&) -> Search &      = delete;
 
     /// Performs the search
     /// @param[in] args Command line arguments
@@ -48,11 +46,11 @@ protected:
     /// Destructor
     virtual ~Search();
 
-    bool exclude_file_by_content(std::string const &path) const;
+    auto exclude_file_by_content(std::string const &path) const -> bool;
 
     void find_in_file(std::string const &path) const;
 
-    virtual size_t print_match(char const *buf, Match const &pmatch, bool nocolor) const;
+    virtual auto print_match(char const *buf, Match const &pmatch, bool nocolor) const -> size_t;
 
     virtual void find_files(std::string const &root, std::string const &path, bool dirMatch) const = 0;
 

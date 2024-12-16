@@ -20,9 +20,9 @@ public:
     /// Dtor
     ~Match() = default;
 
-    inline size_t position() const { return _position; }
+    inline auto position() const { return _position; }
 
-    inline size_t length() const { return _length; }
+    inline auto length() const { return _length; }
 
     inline void set_pos_and_len(size_t pos, size_t len)
     {
@@ -45,9 +45,9 @@ public:
     explicit Regex(ArgVal const &r);
     ~Regex();
 
-    inline bool valid() const { return _valid; }
+    inline auto valid() const { return _valid; }
 
-    bool match(std::string_view s, Match *pmatch = nullptr) const;
+    auto match(std::string_view s, Match *pmatch = nullptr) const -> bool;
 
 private:
 

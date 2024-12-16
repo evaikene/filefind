@@ -1,9 +1,7 @@
-#ifndef SEARCH_UNIX_H
-#define SEARCH_UNIX_H
+#ifndef SEARCH_UNIX_H_INCLUDED
+#  define SEARCH_UNIX_H_INCLUDED
 
 #include "search.H"
-
-#include <dirent.h>
 
 class SearchUnix : public Search
 {
@@ -15,11 +13,11 @@ public:
 
 protected:
 
-    void find_files(std::string const & root, std::string const & path, bool dirMatch) const override;
+    static auto getType(std::string const &pathname, unsigned char d) -> unsigned char;
 
-    void exec_cmd(std::string const & cmd, std::string const & path) const override;
+    void find_files(std::string const &root, std::string const &path, bool dirMatch) const override;
 
-    unsigned char getType(std::string const & pathname, unsigned char const d) const;
+    void exec_cmd(std::string const &cmd, std::string const &path) const override;
 
 };
 

@@ -33,10 +33,10 @@ public:
 
     Config(std::string const &fileName, std::optional<std::string> const &fullPath = std::nullopt);
 
-    inline ~Config() {}
+    inline ~Config() = default;
 
     /// True if the configuration is valid and can be used
-    inline bool valid() const { return _valid; }
+    inline auto valid() const { return _valid; }
 
     /// Returns values from the specified section
     auto values(std::string const &section) const -> StringList;
@@ -48,13 +48,22 @@ protected:
     bool        _valid;
     SectionsMap _sections;
 
-    bool loadConfig(std::string const &fileName, std::optional<std::string> const &fullPath);
+    auto loadConfig(std::string const &fileName, std::optional<std::string> const &fullPath) -> bool;
 
     static auto getLocalConfig(std::string const &fileName) -> std::string;
     static auto getSystemConfig(std::string const &fileName) -> std::string;
 
+    /// Trim leading and trailing whitespace
+    /// @param[in,out] s String to trim
     static void trim(std::string_view &s);
-    static bool is_section(std::string_view &s);
+
+    /// Check if the string is a section
+    /// @param[in,out] s String to check
+    /// @return True if the string is a section
+    ///
+    /// A section is a string that starts with '[' and ends with ']'.
+    /// If the string is a section, the string is modified to remove the section markers.
+    static auto is_section(std::string_view &s) -> bool;
 };
 
 #endif // CONFIG_H

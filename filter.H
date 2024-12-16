@@ -14,16 +14,16 @@ public:
     explicit Filter(Args const &args);
     ~Filter();
 
-    inline Args const &args() const { return _args; }
+    inline auto args() const -> auto const & { return _args; }
 
-    bool match_dir(std::string const &name) const;
-    bool exclude_dir(std::string const &name) const;
-    bool match_file(std::string const &name) const;
-    bool has_content_filters() const;
-    bool has_exclude_content_filters() const;
-    bool print_content() const;
-    bool match_content(std::string_view line, Match *pmatch = nullptr) const;
-    bool exclude_content(std::string_view line) const;
+    auto match_dir(std::string const &name) const -> bool;
+    auto exclude_dir(std::string const &name) const -> bool;
+    auto match_file(std::string const &name) const -> bool;
+    auto has_content_filters() const -> bool;
+    auto has_exclude_content_filters() const -> bool;
+    auto print_content() const -> bool;
+    auto match_content(std::string_view line, Match *pmatch = nullptr) const -> bool;
+    auto exclude_content(std::string_view line) const -> bool;
 
 private:
 
@@ -31,7 +31,7 @@ private:
     Regex::PtrList _in_content;
     Regex::PtrList _ex_content;
 
-    static bool fnmatch(std::string const &pattern, std::string const &string, bool icase);
+    static auto fnmatch(std::string const &pattern, std::string const &string, bool icase) -> bool;
 };
 
 #endif

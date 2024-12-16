@@ -3,13 +3,11 @@
 
 #include <fmt/format.h>
 
-#include <stdio.h>
-
-namespace _ {
+namespace {
 
 constexpr size_t BUF_SIZE = 4096;
 
-}
+} // namespace
 
 Config::Config(std::string const &fileName, std::optional<std::string> const &fullPath)
     : _valid(false)
@@ -21,14 +19,14 @@ Config::Config(std::string const &fileName, std::optional<std::string> const &fu
 
 auto Config::values(std::string const & section) const -> StringList
 {
-    SectionsMap::const_iterator it = _sections.find(section);
+    auto it = _sections.find(section);
     if (it == _sections.end()) {
         return {};
     }
     return it->second;
 }
 
-bool Config::loadConfig(std::string const &fileName, std::optional<std::string> const &fullPath)
+auto Config::loadConfig(std::string const &fileName, std::optional<std::string> const &fullPath) -> bool
 {
     auto f = Utils::InvalidFilePtr();
     if (fullPath) {
@@ -47,10 +45,10 @@ bool Config::loadConfig(std::string const &fileName, std::optional<std::string> 
     auto [el, ok] = _sections.emplace(std::string{}, StringList{});
     auto *section = &el->second;
 
-    char buf[_::BUF_SIZE];
-    while (fgets(buf, _::BUF_SIZE, f.get()) != nullptr) {
+    std::array<char, BUF_SIZE> buf;
+    while (fgets(buf.data(), BUF_SIZE, f.get()) != nullptr) {
 
-        std::string_view line(buf);
+        std::string_view line(buf.data());
 
         // Trim leading and trailing whitespace
         trim(line);
@@ -83,21 +81,21 @@ bool Config::loadConfig(std::string const &fileName, std::optional<std::string> 
     return true;
 }
 
-std::string Config::getLocalConfig(std::string const &filename)
+auto Config::getLocalConfig(std::string const &filename) -> std::string
 {
     // Determine the home directory
     auto const home = Utils::getenv("HOME");
     return fmt::format("{}/.config/{}", home ? *home : "", filename);
 }
 
-std::string Config::getSystemConfig(std::string const & filename)
+auto Config::getSystemConfig(std::string const & filename) -> std::string
 {
     return fmt::format("/etc/{}", filename);
 }
 
 void Config::trim(std::string_view &s)
 {
-    static constexpr char const *chars = "\t\n\v\f\r ";
+    constexpr char const *chars = "\t\n\v\f\r ";
     auto pos = s.find_first_not_of(chars);
     if (pos != std::string_view::npos) {
         s.remove_prefix(pos);
@@ -112,7 +110,7 @@ void Config::trim(std::string_view &s)
     }
 }
 
-bool Config::is_section(std::string_view &s)
+auto Config::is_section(std::string_view &s) -> bool
 {
     if (s.empty() || s[0] != '[' || s[s.size() - 1] != ']') {
         return false;

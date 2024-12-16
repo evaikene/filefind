@@ -5,8 +5,6 @@
 #include <optional>
 #include <string>
 
-#include <stdio.h>
-
 namespace Utils {
 
 /// Return a system error message

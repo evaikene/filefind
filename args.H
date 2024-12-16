@@ -33,13 +33,13 @@ public:
     }
 
     /// Move ctor
-    inline ArgVal(ArgVal &&rhs)
+    inline ArgVal(ArgVal &&rhs) noexcept
     {
         swap(rhs);
     }
 
     /// Move assignment
-    inline ArgVal &operator=(ArgVal &&rhs)
+    inline auto operator=(ArgVal &&rhs) noexcept -> ArgVal &
     {
         if (this != &rhs) {
             clear();
@@ -50,16 +50,16 @@ public:
 
     /// Avoid copying
     ArgVal(ArgVal const &) = delete;
-    ArgVal &operator=(ArgVal const &) = delete;
+    auto operator=(ArgVal const &) -> ArgVal & = delete;
 
     /// Returns the string value
-    inline auto &str() const { return _value; }
+    inline auto str() const -> auto & { return _value; }
 
-    inline bool noCase() const { return _flags & Flags::NO_CASE; };
+    inline auto noCase() const -> bool { return (_flags & Flags::NO_CASE) != 0; }
 
-    inline bool no() const { return _flags & Flags::NOT; };
+    inline auto no() const -> bool { return (_flags & Flags::NOT) != 0; }
 
-    inline bool list() const { return _flags & Flags::LIST; };
+    inline auto list() const ->bool { return (_flags & Flags::LIST) != 0; }
 
 private:
 
@@ -80,7 +80,7 @@ private:
         _value.clear();
     }
 
-    inline void swap(ArgVal &rhs)
+    inline void swap(ArgVal &rhs) noexcept
     {
         std::swap(_flags, rhs._flags);
         _value.swap(rhs._value);
@@ -133,37 +133,43 @@ public:
 
     Args(int argc, char **argv);
 
-    inline ~Args() {}
+    inline ~Args() = default;
+
+    /// No copying or moving
+    Args(Args const &) = delete;
+    auto operator=(Args const &) -> Args & = delete;
+    Args(Args &&) = delete;
+    auto operator=(Args &&) -> Args & = delete;
 
     /// Flag indicating that the application should exit without performing any searches
-    inline bool exit() const { return _exit; }
+    inline auto exit() const { return _exit; }
 
     /// Flag indicating that command line arguments are valid
-    inline bool valid() const { return _valid; }
+    inline auto valid() const { return _valid; }
 
-    inline auto &path() const { return _path; }
+    inline auto path() const -> auto const & { return _path; }
 
-    inline auto &includeFiles() const { return _inFiles; }
+    inline auto includeFiles() const -> auto const & { return _inFiles; }
 
-    inline auto &excludeFiles() const { return _exFiles; }
+    inline auto excludeFiles() const -> auto const & { return _exFiles; }
 
-    inline auto &includeDirs() const { return _inDirs; }
+    inline auto includeDirs() const -> auto const & { return _inDirs; }
 
-    inline auto &excludeDirs() const { return _exDirs; }
+    inline auto excludeDirs() const -> auto const & { return _exDirs; }
 
-    inline auto &includeContent() const { return _inContent; }
+    inline auto includeContent() const -> auto const & { return _inContent; }
 
-    inline auto &excludeContent() const { return _exContent; }
+    inline auto excludeContent() const -> auto const & { return _exContent; }
 
-    inline bool allContent() const { return _allContent; }
+    inline auto allContent() const { return _allContent; }
 
-    inline int extraContent() const { return _extraContent; }
+    inline auto extraContent() const { return _extraContent; }
 
-    inline bool ascii() const { return _ascii; }
+    inline auto ascii() const { return _ascii; }
 
-    inline bool noColor() const { return _noColor; }
+    inline auto noColor() const { return _noColor; }
 
-    inline auto &execCmd() const { return _exec; }
+    inline auto execCmd() const -> auto const & { return _exec; }
 
 private:
 

@@ -1,5 +1,5 @@
-#ifndef CMDLINE_H
-#define CMDLINE_H
+#ifndef CMDLINE_H_INCLUDED
+#  define CMDLINE_H_INCLUDED
 
 class CmdLineArg {
 public:
@@ -50,7 +50,7 @@ public:
 
     CmdLine(CmdLineOption const &opts);
 
-    auto next(int argc, char *argv[]) -> CmdLineArg const;
+    auto next(int argc, char **argv) -> CmdLineArg;
 
 private:
 

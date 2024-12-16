@@ -6,10 +6,11 @@
 #include <fmt/color.h>
 #include <fmt/format.h>
 
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+
 #include <dirent.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -100,7 +101,8 @@ void SearchUnix::find_files(std::string const &root, std::string const &path, bo
             std::string const filePath(fullPath + d_name);
             char              buf[PATH_MAX];
             ssize_t           sz = PATH_MAX - 1;
-            if ((sz = readlink(filePath.c_str(), buf, size_t(sz))) == -1) {
+            sz = readlink(filePath.c_str(), buf, size_t(sz));
+            if (sz == -1) {
                 // Ignore invalid symbolic links
                 continue;
             }
@@ -142,7 +144,7 @@ void SearchUnix::find_files(std::string const &root, std::string const &path, bo
             if (_filter.exclude_dir(d_name) || _filter.exclude_dir(newPath)) {
                 continue; // Ignore paths that match ignored directory filters
             }
-            find_files(root, newPath, dirMatch | _filter.match_dir(d_name) | _filter.match_dir(newPath));
+            find_files(root, newPath, dirMatch || _filter.match_dir(d_name) || _filter.match_dir(newPath));
         }
         else if (DT_REG == d_type && _filter.match_file(d_name)) {
             if (!dirMatch) {
@@ -203,7 +205,7 @@ void SearchUnix::find_files(std::string const &root, std::string const &path, bo
 
 /// Returns the type of the inode. Uses stat(2) if the type returned by
 /// readdir(3) is unknown.
-unsigned char SearchUnix::getType(std::string const &pathname, unsigned char const d) const
+auto SearchUnix::getType(std::string const &pathname, unsigned char d) -> unsigned char
 {
     unsigned char rval = d;
     if (d == DT_UNKNOWN) {

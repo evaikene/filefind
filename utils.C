@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
-namespace _ {
+namespace Private {
 
 void close_file(FILE *file)
 {
@@ -14,7 +14,7 @@ void close_file(FILE *file)
     }
 }
 
-} // namespace _
+} // namespace Private
 
 namespace Utils {
 
@@ -49,7 +49,8 @@ auto getenv(char const *name) -> std::optional<std::string>
         free(buf);
     }
 #else
-    if ((buf = ::getenv(name)) != nullptr) {
+    buf = ::getenv(name);
+    if (buf != nullptr) {
         rval = buf;
     }
 #endif
@@ -58,7 +59,7 @@ auto getenv(char const *name) -> std::optional<std::string>
 
 auto InvalidFilePtr() -> FilePtr
 {
-    return FilePtr{nullptr, &_::close_file};
+    return FilePtr{nullptr, &Private::close_file};
 }
 
 auto fopen(std::string const &path, std::string const &mode) -> FilePtr
@@ -72,7 +73,7 @@ auto fopen(std::string const &path, std::string const &mode) -> FilePtr
 #else
     f = ::fopen(path.c_str(), mode.c_str());
 #endif
-    return FilePtr{f, &_::close_file};
+    return FilePtr{f, &Private::close_file};
 }
 
 auto strncpy_s(char *dst, size_t sz, char const *src, size_t len) -> char *
