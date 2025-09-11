@@ -9,11 +9,11 @@ AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 
 AC_PROG_CXX
 AC_LANG(C++)
-AX_CHECK_COMPILE_FLAG([-std=c++11], [
-	CXXFLAGS="$CXXFLAGS -std=c++11"
+AX_CHECK_COMPILE_FLAG([-std=c++17], [
+        CXXFLAGS="$CXXFLAGS -std=c++17"
 ], [
-	echo "C++ compiler cannot compile C++11 code"
-	exit -1
+        echo "C++ compiler cannot compile C++17 code"
+        exit -1
 ])
 
 AC_CONFIG_FILES([Makefile])
